@@ -1,0 +1,8 @@
+logging:
+  level:
+    org.springframework: ERROR
+    it.nicus: DEBUG
+
+spring:
+  main:
+    banner-mode: "off"
