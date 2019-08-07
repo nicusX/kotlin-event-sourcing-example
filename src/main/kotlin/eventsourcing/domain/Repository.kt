@@ -1,5 +1,6 @@
 package eventsourcing.domain
 
+import eventsourcing.domain.AggregateRoot.Companion.loadFromHistory
 import org.slf4j.LoggerFactory
 
 interface Repository<A: AggregateRoot> {
@@ -24,7 +25,7 @@ abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) 
         val aggregate = new(id)
         log.debug("Retrieve {} by id:{}", aggregate.aggregateType(), id)
         val events = store.getEventsForAggregate(aggregate.aggregateType(), id)
-        aggregate.loadFromHistory(events)
+        loadFromHistory(aggregate, events)
         return aggregate
     }
 

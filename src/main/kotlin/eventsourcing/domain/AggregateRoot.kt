@@ -10,9 +10,6 @@ interface AggregateType
 
 abstract class AggregateRoot(val id: AggregateID) {
 
-    // FIXME does this get the runtime class?
-    protected val log = LoggerFactory.getLogger(this.javaClass)
-
     abstract fun aggregateType(): AggregateType
 
     private val uncommittedChanges = ArrayList<Event>()
@@ -21,12 +18,6 @@ abstract class AggregateRoot(val id: AggregateID) {
 
     fun markChangesAsCommitted() {
         uncommittedChanges.clear()
-    }
-
-    fun loadFromHistory(history: Iterable<Event>) {
-        log.debug("Reloading aggregate state from history")
-        for(event: Event in history)
-            applyChange(event)
     }
 
     protected fun applyChangeAndQueueEvent(event : Event) {
@@ -49,5 +40,19 @@ abstract class AggregateRoot(val id: AggregateID) {
 
     class ApplyingAnEventToTheIncorrectAggregateVersionExcetpion(eventClass: Class<out Event>, expectedVersion: Long, actualVersion: Long)
         : Exception("Applying ${eventClass.canonicalName} to the wrong aggregate version. Expected:$expectedVersion, actual: $actualVersion")
+
+    companion object {
+        val log = LoggerFactory.getLogger(AggregateRoot::class.java)
+
+        // TODO Make this a type-safe builder?
+        fun <A : AggregateRoot> loadFromHistory(aggregate: A,  history: Iterable<Event>) : A  {
+            log.debug("Reloading aggregate {} state from history", aggregate)
+            // TODO It does not check events are for this aggregate
+            for(event: Event in history) {
+                aggregate.applyChange(event)
+            }
+            return aggregate
+        }
+    }
 }
 

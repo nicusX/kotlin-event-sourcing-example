@@ -1,23 +1,23 @@
 package eventsourcing.eventstore
 
+import eventsourcing.EventsAssert.Companion.assertThatEvents
 import eventsourcing.domain.*
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 internal class InMemoryEventStoreTest {
 
-    val AGGREGATE_ID : ClassID = "aggr012"
-    val AGGREGATE_TYPE : AggregateType = TrainingClassAggregate
-    val SOME_EVENTS : List<Event> = listOf(
-            StudentEnrolled(AGGREGATE_ID, "student-1"),
-            StudentUnenrolled(AGGREGATE_ID, "student-2"),
-            StudentEnrolled(AGGREGATE_ID, "student-3")
+    val AN_AGGREGATE_ID : ClassID = "aggr012"
+    val AN_AGGREGATE_TYPE : AggregateType = TrainingClassAggregateType
+    val SOME_EVENTS_OF_AN_AGGREGATE : List<Event> = listOf(
+            StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
+            StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+            StudentEnrolled(AN_AGGREGATE_ID, "student-3")
     )
 
-    val MORE_EVENTS : List<Event> = listOf(
-            StudentEnrolled(AGGREGATE_ID, "student-4"),
-            StudentEnrolled(AGGREGATE_ID, "student-5")
+    val MORE_EVENTS_OF_AN_AGGREGATE : List<Event> = listOf(
+            StudentEnrolled(AN_AGGREGATE_ID, "student-4"),
+            StudentEnrolled(AN_AGGREGATE_ID, "student-5")
     )
 
     val ANOTHER_AGGREGATE_ID : ClassID = "aggr045"
@@ -28,41 +28,55 @@ internal class InMemoryEventStoreTest {
 
     @Test
     fun `should store events, with no expected versions, and retrieve them back`() {
-        val sut : EventStore = InMemoryEventStore()
-        sut.saveEvents(AGGREGATE_TYPE, AGGREGATE_ID, SOME_EVENTS)
+        val sut: EventStore = givenAnInMemoryEventStore (
+                { withSavedEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, SOME_EVENTS_OF_AN_AGGREGATE)})
 
-        val extractedEvents = sut.getEventsForAggregate(AGGREGATE_TYPE, AGGREGATE_ID)
+        val extractedEvents = sut.getEventsForAggregate(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID)
 
-        assertThat(extractedEvents).hasSize(3)
-        matchesAllEvents(extractedEvents,SOME_EVENTS)
+        assertThatEvents(extractedEvents).onlyContainsInOrder(SOME_EVENTS_OF_AN_AGGREGATE)
     }
 
     @Test
-    fun `should throw exception if the expected version does not match actual version`() {
-        val sut : EventStore = InMemoryEventStore()
-        sut.saveEvents(AGGREGATE_TYPE, AGGREGATE_ID, SOME_EVENTS)
+    fun `should throw ConcurrencyException if the expected version does not match actual version`() {
+        val sut : EventStore = givenAnInMemoryEventStore(
+                { withSavedEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, SOME_EVENTS_OF_AN_AGGREGATE) } )
 
         assertThrows<ConcurrencyException> {
-            sut.saveEvents(AGGREGATE_TYPE, AGGREGATE_ID, MORE_EVENTS, 42)
+            sut.saveEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, MORE_EVENTS_OF_AN_AGGREGATE, 42)
         }
     }
 
     @Test
     fun `should retrieve only events of the specified aggregate`() {
-        val sut : EventStore = InMemoryEventStore()
-        sut.saveEvents(AGGREGATE_TYPE, AGGREGATE_ID, SOME_EVENTS)
-        sut.saveEvents(AGGREGATE_TYPE, ANOTHER_AGGREGATE_ID, EVENTS_OF_ANOTHER_AGGREGATE)
+        val sut : EventStore = givenAnInMemoryEventStore (
+                { withSavedEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, SOME_EVENTS_OF_AN_AGGREGATE) },
+                { withSavedEvents(AN_AGGREGATE_TYPE, ANOTHER_AGGREGATE_ID, EVENTS_OF_ANOTHER_AGGREGATE) })
 
-        val extractedEvents = sut.getEventsForAggregate(AGGREGATE_TYPE, AGGREGATE_ID)
 
-        assertThat(extractedEvents).hasSize(3)
-        matchesAllEvents(extractedEvents,SOME_EVENTS)
+        val extractedEvents = sut.getEventsForAggregate(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID)
+
+        assertThatEvents(extractedEvents).onlyContainsInOrder(SOME_EVENTS_OF_AN_AGGREGATE)
     }
 
+    @Test
+    fun `should throw AggregateNotFoundException when retrieving events for a non-existing aggregate`() {
+        val sut : EventStore = givenAnInMemoryEventStore(
+                { withSavedEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, SOME_EVENTS_OF_AN_AGGREGATE) } )
 
-    private fun matchesAllEvents(actual: Iterable<Event>, expected: List<Event>) {
-        for( (i,actualEvent) in actual.withIndex()) {
-            assertThat(actualEvent).isEqualTo(expected[i])
+        assertThrows<AggregateNotFoundException> {
+            sut.getEventsForAggregate(AN_AGGREGATE_TYPE, "this-id-does-not-exist")
         }
     }
+
+}
+
+internal fun givenAnInMemoryEventStore(vararg inits: EventStore.() -> Unit ) : EventStore {
+    val es = InMemoryEventStore()
+    for( init in inits )
+        es.init()
+    return es
+}
+
+internal fun EventStore.withSavedEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>) {
+    saveEvents(aggregateType, aggregateId, events)
 }

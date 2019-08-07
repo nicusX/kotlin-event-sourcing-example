@@ -1,9 +1,6 @@
 package eventsourcing.eventstore
 
-import eventsourcing.domain.AggregateID
-import eventsourcing.domain.AggregateType
-import eventsourcing.domain.Event
-import eventsourcing.domain.EventStore
+import eventsourcing.domain.*
 import org.slf4j.LoggerFactory
 import java.lang.Exception
 
@@ -55,9 +52,3 @@ class InMemoryEventStore : EventStore {
         }
     }
 }
-
-class AggregateNotFoundException(aggregateType: AggregateType, aggregateID: AggregateID)
-    : Exception("Aggregate not found. ${aggregateType.toString()}:${aggregateID.toString()}")
-
-class ConcurrencyException(aggregateType: AggregateType, aggregateID: AggregateID, expectedVersion: Long, actualVersion: Long)
-    : Exception("Concurrency violation on ${aggregateType.toString()}:${aggregateID.toString()}. Expected version: $expectedVersion, Actual version: $actualVersion")
