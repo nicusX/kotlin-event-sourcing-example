@@ -1,5 +1,6 @@
 package eventsourcing.eventstore
 
+import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatEvents
 import eventsourcing.domain.*
 import org.junit.jupiter.api.Test
@@ -68,10 +69,21 @@ internal class InMemoryEventStoreTest {
         }
     }
 
+    @Test
+    fun `should publish all saved events`() {
+        val publisher = mock<EventPublisher<Event>>()
+        val sut : EventStore = givenAnInMemoryEventStore(eventPublisher = publisher)
+
+        sut.saveEvents(AN_AGGREGATE_TYPE, AN_AGGREGATE_ID, SOME_EVENTS_OF_AN_AGGREGATE)
+
+        for(expectedEvent in SOME_EVENTS_OF_AN_AGGREGATE)
+            verify(publisher).publish(expectedEvent)
+        verifyNoMoreInteractions(publisher)
+    }
 }
 
-internal fun givenAnInMemoryEventStore(vararg inits: EventStore.() -> Unit ) : EventStore {
-    val es = InMemoryEventStore()
+internal fun givenAnInMemoryEventStore(vararg inits: EventStore.() -> Unit, eventPublisher : EventPublisher<Event> = mock() ) : EventStore {
+    val es = InMemoryEventStore(eventPublisher)
     for( init in inits )
         es.init()
     return es

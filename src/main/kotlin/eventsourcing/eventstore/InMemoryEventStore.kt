@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 
 
-class InMemoryEventStore : EventStore {
+class InMemoryEventStore(val eventPublisher : EventPublisher<Event>) : EventStore {
     companion object {
         val log = LoggerFactory.getLogger(InMemoryEventStore::class.java)
     }
@@ -33,7 +33,7 @@ class InMemoryEventStore : EventStore {
 
         streams[streamKey] = stream
 
-        // TODO Publish events to subscribers
+        publishEvents(events)
     }
 
     private fun checkLatestEventVersionMatchesExpected(streamKey: StreamKey, eventDescriptors: List<EventDescriptor>, expectedVersion: Long?) {
@@ -50,5 +50,10 @@ class InMemoryEventStore : EventStore {
             val eventVersion = aggregateVersion + i
             this.eventDescriptors.add( EventDescriptor(streamKey, eventVersion, event) )
         }
+    }
+
+    private fun publishEvents(events: Iterable<Event>) {
+        for( event in events )
+            eventPublisher.publish(event)
     }
 }
