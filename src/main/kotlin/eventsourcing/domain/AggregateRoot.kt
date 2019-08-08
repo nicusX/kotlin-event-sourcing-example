@@ -1,5 +1,6 @@
 package eventsourcing.domain
 
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -14,9 +15,10 @@ abstract class AggregateRoot(val id: AggregateID) {
 
     private val uncommittedChanges = ArrayList<Event>()
 
-    fun getUncommittedChanges() : Iterable<Event> = uncommittedChanges.asIterable()
+    fun getUncommittedChanges() : Iterable<Event> = uncommittedChanges.toList().asIterable()
 
     fun markChangesAsCommitted() {
+        log.debug("Marking all changes as committed")
         uncommittedChanges.clear()
     }
 
@@ -42,7 +44,7 @@ abstract class AggregateRoot(val id: AggregateID) {
         : Exception("Applying ${eventClass.canonicalName} to the wrong aggregate version. Expected:$expectedVersion, actual: $actualVersion")
 
     companion object {
-        val log = LoggerFactory.getLogger(AggregateRoot::class.java)
+        val log : Logger = LoggerFactory.getLogger(AggregateRoot::class.java)
 
         // TODO Make this a type-safe builder?
         fun <A : AggregateRoot> loadFromHistory(aggregate: A,  history: Iterable<Event>) : A  {

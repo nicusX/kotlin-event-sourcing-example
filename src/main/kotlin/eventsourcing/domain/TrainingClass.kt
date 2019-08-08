@@ -1,5 +1,6 @@
 package eventsourcing.domain
 
+import java.time.LocalDate
 import java.util.*
 
 // FIXME make this a real type
@@ -61,6 +62,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
         return this
     }
 
+    // TODO add a "reason"
     fun unenrollStudent(studentId: StudentID) : TrainingClass {
         if (!this.enrolledStudents.contains(studentId))
             throw StudentNotEnrolledException(this.id, studentId)
@@ -69,18 +71,15 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
         return this
     }
 
-    companion object {
-        fun scheduleNewClass(title: String, date: Date, size: Int) : TrainingClass {
+    // FIXME think about a different way for creating the new aggregate. A static factory makes testing harder
+    companion object  {
+        fun scheduleNewClass(title: String, date: LocalDate, size: Int) : TrainingClass {
             val classId = UUID.randomUUID().toString()
             val trainingClass = TrainingClass(classId)
             trainingClass.applyChangeAndQueueEvent(NewClassScheduled(classId, title, date, size))
             return trainingClass
         }
     }
-}
-
-class TrainingClassRepository(eventStore: EventStore) : EventSourcedRepository<TrainingClass>(eventStore) {
-    override fun new(id: AggregateID): TrainingClass = TrainingClass(id)
 }
 
 

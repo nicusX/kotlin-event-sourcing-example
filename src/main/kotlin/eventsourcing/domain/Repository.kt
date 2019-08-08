@@ -1,34 +1,35 @@
 package eventsourcing.domain
 
-import eventsourcing.domain.AggregateRoot.Companion.loadFromHistory
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface Repository<A: AggregateRoot> {
     fun getById(id: AggregateID): A
-    fun save(aggregate: A, expectedVersion: Long)
+    fun save(aggregate: A, expectedVersion: Long? = null)
+    fun new(id: AggregateID) : A
 }
 
 abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) : Repository<A> {
 
-    companion object {
-        val log = LoggerFactory.getLogger(EventSourcedRepository::class.java)
-    }
-
     private val store = eventStore
 
-    override fun save(aggregate: A, expectedVersion: Long) {
+    override fun save(aggregate: A, expectedVersion: Long?) {
         log.debug("Storing uncommitted event for '${aggregate.aggregateType()}' id: $aggregate.id")
-        store.saveEvents(aggregate.aggregateType(), aggregate.id, aggregate.getUncommittedChanges(), expectedVersion)
+        val uncommitedChanges = aggregate.getUncommittedChanges()
+        store.saveEvents(aggregate.aggregateType(), aggregate.id, uncommitedChanges, expectedVersion)
+        aggregate.markChangesAsCommitted()
     }
 
     override fun getById(id: AggregateID): A {
         val aggregate = new(id)
         log.debug("Retrieve {} by id:{}", aggregate.aggregateType(), id)
         val events = store.getEventsForAggregate(aggregate.aggregateType(), id)
-        loadFromHistory(aggregate, events)
+        AggregateRoot.loadFromHistory(aggregate, events)
         return aggregate
     }
 
-    abstract fun new(id: AggregateID) : A
+    companion object {
+        val log : Logger = LoggerFactory.getLogger(EventSourcedRepository::class.java)
+    }
 }
 
