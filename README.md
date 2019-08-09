@@ -5,8 +5,10 @@
 Learning exercise, implementing a very simple Event-Sourcing, based on [Greg Young's SimpleCQRS](https://github.com/gregoryyoung/m-r),
 rewritten in Kotlin and for a different domain.
 
-The quality of code is suboptimal: the original SimpleCQRS example is very old-fashioned-OOP, everything-mutable code. 
-I am improving some aspects without diverging too much from the original architecture.
+Apologies for the style of the code.
+The original SimpleCQRS example is old-fashioned OOP, everything is mutable and (ab)use of inheritance a lot.
+This does not fit well with a more functional approach.
+I am improving some aspects but I do not want to diverge too much from the original design.
 
 
 ## General notes
