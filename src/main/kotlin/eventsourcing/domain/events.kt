@@ -2,15 +2,43 @@ package eventsourcing.domain
 
 import java.time.LocalDate
 
-// FIXME Events should contain a version, but the version cannot be assigned until the event is stored into its EventStore stream
 // FIXME Events should all contain a target aggregate type and ID
-abstract class Event() : Message()
+abstract class Event(private val version: Long?) : Message() {
+    // TODO find a better way of managing Event.version
+    //      The problem is the version is assigned only then the Event is stored in the EventStore
+    fun version(): Long? = version
+    abstract fun copyWithVersion(version: Long): Event
+}
 
-data class NewClassScheduled(val classId: ClassID, val title: String, val date: LocalDate, val classSize: Int) : Event()
 
-data class StudentEnrolled(val classId: ClassID, val studentId: StudentID) : Event()
+data class NewClassScheduled (
+        val classId: ClassID,
+        val title: String,
+        val date: LocalDate,
+        val classSize: Int,
+        val version: Long? = null) : Event(version) {
+
+    // FIXME any better way than reimplementing in all subclasses?
+    override fun copyWithVersion(version: Long): NewClassScheduled =
+            this.copy(version = version)
+}
+
+
+
+data class StudentEnrolled (
+        val classId: ClassID,
+        val studentId: StudentID,
+        val version: Long? = null) : Event(version) {
+    override fun copyWithVersion(version: Long): StudentEnrolled =
+            this.copy(version = version)
+}
 
 // TODO add "reason"
-data class StudentUnenrolled(val classId: ClassID, val studentId: StudentID) : Event()
+data class StudentUnenrolled(val classId: ClassID,
+                             val studentId: StudentID,
+                             val version: Long? = null) : Event(version) {
+    override fun copyWithVersion(version: Long): StudentUnenrolled =
+            this.copy(version = version)
+}
 
 // FIXME Identify "new" and "final" events?

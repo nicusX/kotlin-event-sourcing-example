@@ -1,13 +1,13 @@
 package eventsourcing.eventstore
 
 import eventsourcing.domain.*
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
 
-class InMemoryEventStore(val eventPublisher : EventPublisher<Event>) : EventStore {
+class InMemoryEventStore(private val eventPublisher : EventPublisher<Event>) : EventStore {
     companion object {
-        val log = LoggerFactory.getLogger(InMemoryEventStore::class.java)
+        val log : Logger = LoggerFactory.getLogger(InMemoryEventStore::class.java)
     }
 
     private data class StreamKey(val aggregateType: AggregateType, val aggregateID: AggregateID)
@@ -29,11 +29,9 @@ class InMemoryEventStore(val eventPublisher : EventPublisher<Event>) : EventStor
 
         checkLatestEventVersionMatchesExpected(streamKey, stream.eventDescriptors, expectedVersion)
 
-        stream.append(streamKey, events, expectedVersion ?: 0)
+        stream.appendAndPublish(streamKey, events, expectedVersion ?: 0)
 
         streams[streamKey] = stream
-
-        publishEvents(events)
     }
 
     private fun checkLatestEventVersionMatchesExpected(streamKey: StreamKey, eventDescriptors: List<EventDescriptor>, expectedVersion: Long?) {
@@ -44,16 +42,19 @@ class InMemoryEventStore(val eventPublisher : EventPublisher<Event>) : EventStor
         }
     }
 
-    private fun EventStream.append(streamKey: StreamKey, events: Iterable<Event>, aggregateVersion: Long  ) {
-        // FIXME the event should contain its version, but the version cannot be assigned until this point
+    private fun EventStream.appendAndPublish(streamKey: StreamKey, events: Iterable<Event>, previousAggregateVersion: Long  )  {
         for ( (i, event) in events.withIndex()) {
-            val eventVersion = aggregateVersion + i
-            this.eventDescriptors.add( EventDescriptor(streamKey, eventVersion, event) )
+            val eventVersion = previousAggregateVersion + i
+            val versionedEvent = event.copyWithVersion(eventVersion)
+            val eventDescriptor = EventDescriptor(streamKey, eventVersion, versionedEvent)
+            log.debug("Appending EventDescriptor {} to stream: {}", eventDescriptor, streamKey)
+            this.eventDescriptors.add( eventDescriptor )
+
+            log.debug("Publish event: {}", versionedEvent)
+            eventPublisher.publish(versionedEvent)
         }
     }
 
-    private fun publishEvents(events: Iterable<Event>) {
-        for( event in events )
-            eventPublisher.publish(event)
-    }
+
+
 }
