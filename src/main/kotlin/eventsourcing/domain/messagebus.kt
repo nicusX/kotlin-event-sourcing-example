@@ -6,4 +6,8 @@ interface EventPublisher<E : Event> {
 
 // TODO CommandPublisher
 
-// TODO EventHandler, CommandHandler (by messsage type and/or aggregate)
+// TODO EventHandler, CommandHandler (by message type and/or aggregate)
+
+interface Handles<in E : Event> {
+    fun handle(event : E)
+}
