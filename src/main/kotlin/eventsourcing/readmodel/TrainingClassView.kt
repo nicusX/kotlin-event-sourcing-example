@@ -71,6 +71,7 @@ class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Ha
                 log.debug("Unenrolling student. Updating {} -> {}", old, new)
                 datastore.save(classId, new)
             }
+            else -> log.debug("Event {} not handled", event)
         }
     }
 
