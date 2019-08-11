@@ -12,4 +12,8 @@ class InMemoryDatastore<E> : Datastore<E> {
     override fun save(id: String, entity: E) {
         store[id] = entity
     }
+
+    fun clear() {
+        store.clear()
+    }
 }

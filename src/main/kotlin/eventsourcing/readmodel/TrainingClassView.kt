@@ -32,10 +32,8 @@ data class TrainingClassDTO (
 
 class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Handles<Event> {
 
-    // FIXME Return Optional(TrainingClass) rather than throwing an exception
     fun getById(classId: ClassID) : TrainingClassDTO =
             datastore.getById(classId)
-
 
     fun list() : List<TrainingClassDTO> =
             datastore.list()

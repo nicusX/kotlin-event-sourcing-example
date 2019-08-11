@@ -26,7 +26,6 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 	testImplementation( "com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
-
 }
 
 tasks.withType<KotlinCompile> {

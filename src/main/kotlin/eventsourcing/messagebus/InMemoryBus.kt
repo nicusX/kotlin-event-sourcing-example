@@ -15,11 +15,12 @@ class InMemoryBus : EventPublisher<Event> {
        }
     }
 
-    override fun register(eventHandler: Handles<Event>) {
+    override fun register(eventHandler: Handles<Event>) : EventPublisher<Event> {
         log.info("Registering event handler {}", eventHandler)
         handlers += eventHandler
+        return this
     }
-    
+
     companion object {
         private val log = LoggerFactory.getLogger(InMemoryBus::class.java)
     }
