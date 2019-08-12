@@ -1,26 +1,28 @@
 package eventsourcing.rest
 
 import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import eventsourcing.readmodel.InMemoryDatastore
+import eventsourcing.readmodel.RecordNotFound
 import eventsourcing.readmodel.TrainingClassDTO
 import eventsourcing.readmodel.TrainingClassView
-import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.HttpStatus
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.MediaType
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.time.LocalDate
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 
-@SpringBootTest(webEnvironment  = SpringBootTest.WebEnvironment.RANDOM_PORT)
-internal class TrainingClassReadControllerIT(@Autowired var restTemplate: TestRestTemplate) {
+@ExtendWith(SpringExtension::class)
+internal class TrainingClassReadControllerIT() {
 
-    // FIXME change the way we test the controller, to be able to test error handlers too
-
-    @MockBean
+    lateinit var mvc : MockMvc
     lateinit var trainingClassView : TrainingClassView
 
     private val aClassDTO = TrainingClassDTO(
@@ -41,23 +43,43 @@ internal class TrainingClassReadControllerIT(@Autowired var restTemplate: TestRe
             students = listOf("STUDENT-001", "STUDENT-002"),
             version = 3L)
 
+    @BeforeEach
+    fun setup() {
+        trainingClassView = mock<TrainingClassView>()
+        mvc = MockMvcBuilders.standaloneSetup(TrainingClassReadController(trainingClassView))
+                .build()
+    }
+
     @Test
     fun `get an existing Class by ID should return the class representation in JSON`() {
         whenever(trainingClassView.getById(eq("001"))).thenReturn(aClassDTO)
 
-        val res = restTemplate.getForEntity("/classes/001", TrainingClassDTO::class.java)
-        assertThat(res.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(res.body?.classId).isEqualTo(aClassDTO.classId)
-        assertThat(res.body?.version).isEqualTo(aClassDTO.version)
+        mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("""$.classId""").value(aClassDTO.classId))
+                .andExpect(jsonPath("""$.version""").value(aClassDTO.version))
+    }
+
+    @Test
+    fun `get a non-existing Class by ID should return 404`() {
+        whenever(trainingClassView.getById(eq("001")))
+                .thenAnswer{ throw RecordNotFound("001") } // .thenThrows does not work as RecordNotFound is a checked exception
+
+
+        mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound)
     }
 
     @Test
     fun `list Classes should return all `() {
-        whenever(trainingClassView.list()).thenReturn( listOf(aClassDTO, anotherClassDTO)  )
+        whenever(trainingClassView.list()).thenReturn( listOf(aClassDTO, anotherClassDTO))
 
-        val res = restTemplate.getForEntity("/classes", List::class.java)
-        assertThat(res.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(res.body).hasSize(2)
+        mvc.perform(get("/classes").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("""$.[0].classId""").value(aClassDTO.classId))
+                .andExpect(jsonPath("""$.[1].classId""").value(anotherClassDTO.classId))
     }
 
 

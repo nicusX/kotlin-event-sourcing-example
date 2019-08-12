@@ -26,7 +26,7 @@ internal class TrainingClassTest {
             TrainingClass.scheduleNewClass("some-title", LocalDate.now(), 0)
         }
 
-        assertThrows<NoAvailableSpotException> {
+        assertThrows<NoAvailableSpotsException> {
             sut.enrollStudent("student-001")
         }
         assertThatAggregateUncommitedChanges(sut)

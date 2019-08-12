@@ -40,7 +40,7 @@ internal class InMemoryDatastoreTest {
     }
 }
 
-data class Dummy(val id: String, val version: Int)
+private data class Dummy(val id: String, val version: Int)
 
 private fun InMemoryDatastoreTest.given() : InMemoryDatastore<Dummy> = InMemoryDatastore()
 

@@ -56,7 +56,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
             throw StudentAlreadyEnrolledException(studentId, this.id)
 
         if ( this.availableSpots < 1 )
-            throw NoAvailableSpotException(this.id)
+            throw NoAvailableSpotsException(this.id)
 
         applyChangeAndQueueEvent(StudentEnrolled(this.id, studentId))
         return this
@@ -89,5 +89,5 @@ class StudentAlreadyEnrolledException(studentId: StudentID, classId: ClassID)
 class StudentNotEnrolledException(studentId: StudentID, classId: ClassID)
     : Exception("Student $studentId is not enrolled to class $classId")
 
-class NoAvailableSpotException(classId: ClassID)
-    : Exception("Class $classId has no available spot")
+class NoAvailableSpotsException(classId: ClassID)
+    : Exception("Class $classId has no available spots")

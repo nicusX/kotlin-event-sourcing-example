@@ -136,13 +136,13 @@ internal class InMemoryEventStoreTest {
     }
 }
 
-internal fun givenAnInMemoryEventStore(vararg inits: EventStore.() -> Unit, eventPublisher : EventPublisher<Event> = mock() ) : EventStore {
+private fun givenAnInMemoryEventStore(vararg inits: EventStore.() -> Unit, eventPublisher : EventPublisher<Event> = mock() ) : EventStore {
     val es = InMemoryEventStore(eventPublisher)
     for( init in inits )
         es.init()
     return es
 }
 
-internal fun EventStore.withSavedEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>) {
+private fun EventStore.withSavedEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>) {
     saveEvents(aggregateType, aggregateId, events)
 }

@@ -20,9 +20,8 @@ internal class InMemoryBusTest {
         for(h in handlers)
             verify(h).handle(eq(event))
     }
+}
 
-
-    private object DummyEvent : Event(0L) {
-        override fun copyWithVersion(version: Long): Event  = this
-    }
+private object DummyEvent : Event(0L) {
+    override fun copyWithVersion(version: Long): Event  = this
 }

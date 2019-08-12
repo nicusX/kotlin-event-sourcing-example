@@ -42,8 +42,8 @@ internal class EventSourcedRepositoryTest {
         verifyNoMoreInteractions(eventStore)
     }
 
-    private fun eventSourcedRepo(eventStore: EventStore) : EventSourcedRepository<TrainingClass> = object : EventSourcedRepository<TrainingClass>(eventStore) {
-        override fun new(id: AggregateID): TrainingClass = TrainingClass(id)
-    }
+}
 
+private fun eventSourcedRepo(eventStore: EventStore) : EventSourcedRepository<TrainingClass> = object : EventSourcedRepository<TrainingClass>(eventStore) {
+    override fun new(id: AggregateID): TrainingClass = TrainingClass(id)
 }
