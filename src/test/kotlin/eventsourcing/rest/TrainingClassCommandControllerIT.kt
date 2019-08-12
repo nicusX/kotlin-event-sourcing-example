@@ -189,4 +189,3 @@ internal class TrainingClassCommandControllerIT() {
         fun Any.asJsonString(): String = mapper.writeValueAsString(this)
     }
 }
-
