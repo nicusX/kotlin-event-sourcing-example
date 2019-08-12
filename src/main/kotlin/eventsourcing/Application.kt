@@ -14,14 +14,10 @@ import java.time.LocalDate
 @SpringBootApplication
 class KotlinBootApplication {
 
-    val trainingClassView
-            = TrainingClassView(InMemoryDatastore<TrainingClassDTO>())
-    val eventBus : EventPublisher<Event>
-            = InMemoryBus().register(trainingClassView)
-    val eventStore : EventStore
-            = InMemoryEventStore(eventBus)
-    val trainingClassCommandHandler : TrainingClassCommandHandler
-        = TrainingClassCommandHandler(TrainingClassRepository(eventStore))
+    val trainingClassView = TrainingClassView(InMemoryDatastore<TrainingClassDTO>())
+    val eventBus : EventPublisher<Event> = InMemoryBus().register(trainingClassView)
+    val eventStore : EventStore = InMemoryEventStore(eventBus)
+    val trainingClassCommandHandler : TrainingClassCommandHandler = TrainingClassCommandHandler(TrainingClassRepository(eventStore))
 
 
     @Bean fun trainingClassView() = trainingClassView

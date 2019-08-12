@@ -29,7 +29,7 @@ class InMemoryEventStore(private val eventPublisher : EventPublisher<Event>) : E
 
         checkLatestEventVersionMatchesExpected(streamKey, stream.eventDescriptors, expectedVersion)
 
-        stream.appendAndPublish(streamKey, events, expectedVersion ?: 0)
+        stream.appendAndPublish(streamKey, events, expectedVersion ?: -1)
 
         streams[streamKey] = stream
     }
@@ -44,7 +44,7 @@ class InMemoryEventStore(private val eventPublisher : EventPublisher<Event>) : E
 
     private fun EventStream.appendAndPublish(streamKey: StreamKey, events: Iterable<Event>, previousAggregateVersion: Long  )  {
         for ( (i, event) in events.withIndex()) {
-            val eventVersion = previousAggregateVersion + i
+            val eventVersion = previousAggregateVersion + i + 1
             val versionedEvent = event.copyWithVersion(eventVersion)
             val eventDescriptor = EventDescriptor(streamKey, eventVersion, versionedEvent)
             log.debug("Appending EventDescriptor {} to stream: {}", eventDescriptor, streamKey)

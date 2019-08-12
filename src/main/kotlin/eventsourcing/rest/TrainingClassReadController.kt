@@ -16,6 +16,7 @@ import kotlin.reflect.jvm.javaMethod
 @RestController
 class TrainingClassReadController(private val view: TrainingClassView) {
 
+    // TODO Return a simplified DTO in the list
     @GetMapping("/classes")
     fun listTrainingClasses() :  ResponseEntity<List<TrainingClassDTO>>
             = ResponseEntity.ok(view.list())

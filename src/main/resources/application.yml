@@ -1,7 +1,7 @@
 logging:
   level:
     org.springframework: ERROR
-    it.nicus: DEBUG
+    eventsourcing: DEBUG
 
 spring:
   main:

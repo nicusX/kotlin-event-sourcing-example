@@ -26,12 +26,14 @@ class TrainingClassCommandController(private val handler: TrainingClassCommandHa
             try {
                 handler.handle(req.toCommandWithClassId(classId))
                 acceptedResponse( classId )
-            } catch (nf: RecordNotFound) {
+            } catch (nf: AggregateNotFoundException) {
                 ResponseEntity.notFound().build()
             } catch (soe: StudentAlreadyEnrolledException) {
-                ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResource("Student already enrolled"))
+                ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(ErrorResource("Student already enrolled"))
             } catch (nas: NoAvailableSpotsException) {
-                ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResource("No available spots"))
+                ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(ErrorResource("No available spots"))
+            } catch( ce: ConcurrencyException ) {
+                ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResource("Concurrent change detected"))
             }
 
 
@@ -40,10 +42,12 @@ class TrainingClassCommandController(private val handler: TrainingClassCommandHa
             try {
                 handler.handle(req.toCommandWithClassId(classId))
                 acceptedResponse( classId )
-            } catch (nf: RecordNotFound) {
+            } catch (nf: AggregateNotFoundException) {
                 ResponseEntity.notFound().build()
             } catch (sne: StudentNotEnrolledException) {
-                ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResource("Student not enrolled"))
+                ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(ErrorResource("Student not enrolled"))
+            } catch( ce: ConcurrencyException ) {
+                ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResource("Concurrent change detected"))
             }
 }
 
