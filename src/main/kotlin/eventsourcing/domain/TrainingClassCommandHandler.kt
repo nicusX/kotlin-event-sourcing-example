@@ -1,5 +1,6 @@
 package eventsourcing.domain
 
+import eventsourcing.domain.TrainingClass.Companion.scheduleNewClass
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -10,8 +11,7 @@ class TrainingClassCommandHandler(private val repository: TrainingClassRepositor
     fun handle(command: ScheduleNewClass) : ScheduleNewClassSuccess {
         log.debug("Handling command: {}", command)
 
-        // FIXME think about a solution more testable than a static factory
-        val clazz = TrainingClass.scheduleNewClass(command.title, command.date, command.size)
+        val clazz = scheduleNewClass(command.title, command.date, command.size)
         repository.save(clazz)
 
         return ScheduleNewClassSuccess(clazz.id)

@@ -1,60 +1,21 @@
 package eventsourcing.eventstore
 
-import eventsourcing.domain.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import eventsourcing.domain.Event
+import eventsourcing.domain.EventPublisher
 
+/**
+ * Store event streams in memory
+ */
+class InMemoryEventStore(eventPublisher : EventPublisher<Event>) : BaseEventStore(eventPublisher) {
+    private val streams: MutableMap<StreamKey,  MutableList<EventDescriptor>> = mutableMapOf()
 
-class InMemoryEventStore(private val eventPublisher : EventPublisher<Event>) : EventStore {
-    companion object {
-        val log : Logger = LoggerFactory.getLogger(InMemoryEventStore::class.java)
+    override fun stream(key: StreamKey): Iterable<EventDescriptor> = streams[key]?.toList() ?: emptyList()
+
+    override fun isEmptyStream(key: StreamKey): Boolean = streams[key]?.isEmpty() ?: true
+
+    override fun appendEventDescriptor(key: StreamKey, eventDescriptor: EventDescriptor) {
+        val stream = streams[key] ?: mutableListOf()
+        stream.add(eventDescriptor)
+        streams[key] = stream
     }
-
-    private data class StreamKey(val aggregateType: AggregateType, val aggregateID: AggregateID)
-    private data class EventDescriptor(val streamKey: StreamKey, val version: Long, val event: Event)
-    private data class EventStream(val eventDescriptors: MutableList<EventDescriptor> = mutableListOf())
-
-    private val streams: MutableMap<StreamKey, EventStream> = mutableMapOf()
-
-    override fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Iterable<Event> {
-        log.debug("Retrieving events for aggregate {}:{}", aggregateType, aggregateId)
-        val streamKey = StreamKey(aggregateType, aggregateId)
-        return streams[streamKey]?.eventDescriptors?.map { it.event } ?: throw AggregateNotFoundException(aggregateType, aggregateId)
-    }
-
-    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Long?) {
-        log.debug("Appending new events to aggregate {}:{} (expected version: {})", aggregateType, aggregateId, expectedVersion)
-        val streamKey = StreamKey(aggregateType, aggregateId)
-        val stream = streams[streamKey] ?: EventStream()
-
-        checkLatestEventVersionMatchesExpected(streamKey, stream.eventDescriptors, expectedVersion)
-
-        stream.appendAndPublish(streamKey, events, expectedVersion ?: -1)
-
-        streams[streamKey] = stream
-    }
-
-    private fun checkLatestEventVersionMatchesExpected(streamKey: StreamKey, eventDescriptors: List<EventDescriptor>, expectedVersion: Long?) {
-        if ( expectedVersion != null && !eventDescriptors.isEmpty() ) {
-            val latestEventDescriptor =  eventDescriptors.last()
-            if ( latestEventDescriptor.version != expectedVersion )
-                throw ConcurrencyException(streamKey.aggregateType, streamKey.aggregateID, expectedVersion, latestEventDescriptor.version)
-        }
-    }
-
-    private fun EventStream.appendAndPublish(streamKey: StreamKey, events: Iterable<Event>, previousAggregateVersion: Long  )  {
-        for ( (i, event) in events.withIndex()) {
-            val eventVersion = previousAggregateVersion + i + 1
-            val versionedEvent = event.copyWithVersion(eventVersion)
-            val eventDescriptor = EventDescriptor(streamKey, eventVersion, versionedEvent)
-            log.debug("Appending EventDescriptor {} to stream: {}", eventDescriptor, streamKey)
-            this.eventDescriptors.add( eventDescriptor )
-
-            log.debug("Publish event: {}", versionedEvent)
-            eventPublisher.publish(versionedEvent)
-        }
-    }
-
-
-
 }

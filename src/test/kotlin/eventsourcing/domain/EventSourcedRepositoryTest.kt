@@ -1,6 +1,7 @@
 package eventsourcing.domain
 
 import com.nhaarman.mockitokotlin2.*
+import eventsourcing.domain.TrainingClass.Companion.scheduleNewClass
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -12,8 +13,7 @@ internal class EventSourcedRepositoryTest {
         val eventStore = mock<EventStore>()
         val sut = eventSourcedRepo(eventStore)
 
-        val clazz = TrainingClass
-                        .scheduleNewClass("some-title", LocalDate.now(), 10)
+        val clazz = scheduleNewClass("some-title", LocalDate.now(), 10)
                         .enrollStudent("a-student")
 
         sut.save(clazz)

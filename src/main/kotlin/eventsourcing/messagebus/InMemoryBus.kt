@@ -16,7 +16,7 @@ class InMemoryBus : EventPublisher<Event> {
     }
 
     override fun register(eventHandler: Handles<Event>) : EventPublisher<Event> {
-        log.info("Registering event handler {}", eventHandler)
+        log.info("Registering a new event handler {}", eventHandler)
         handlers += eventHandler
         return this
     }

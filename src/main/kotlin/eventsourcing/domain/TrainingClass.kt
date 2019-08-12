@@ -3,11 +3,10 @@ package eventsourcing.domain
 import java.time.LocalDate
 import java.util.*
 
-// FIXME make this a real type
 typealias ClassID = String
 
 object TrainingClassAggregateType : AggregateType {
-    override fun toString() = "CLASS"
+    override fun toString() = "class"
 }
 
 class TrainingClass(id: ClassID) : AggregateRoot(id) {
@@ -71,9 +70,8 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
         return this
     }
 
-    // FIXME think about a different way for creating the new aggregate. A static factory makes testing harder
     companion object  {
-        fun scheduleNewClass(title: String, date: LocalDate, size: Int) : TrainingClass {
+        fun scheduleNewClass (title: String, date: LocalDate, size: Int) : TrainingClass  {
             val classId = UUID.randomUUID().toString()
             val trainingClass = TrainingClass(classId)
             trainingClass.applyChangeAndQueueEvent(NewClassScheduled(classId, title, date, size))

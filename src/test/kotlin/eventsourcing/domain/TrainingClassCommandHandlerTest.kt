@@ -9,8 +9,6 @@ class TrainingClassCommandHandlerTest {
 
     @Test
     fun `when handling a ScheduleNewClass command, it should save a new Class with a NewClassScheduled uncommited event and return a successful result`() {
-        // FIXME test is different form the following as the new class is created by a static factory (unmockable) within the
-        //       command handler
         val repository = mock<TrainingClassRepository>()
         val sut = TrainingClassCommandHandler(repository)
 
