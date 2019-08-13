@@ -13,6 +13,7 @@ import java.net.URI
 import kotlin.reflect.jvm.internal.impl.name.ClassId
 import kotlin.reflect.jvm.javaMethod
 
+// FIXME rewrite using Routing DSL and coRouter
 @RestController
 class TrainingClassReadController(private val view: TrainingClassView) {
 

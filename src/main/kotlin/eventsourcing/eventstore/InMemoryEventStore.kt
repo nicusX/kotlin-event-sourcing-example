@@ -5,6 +5,7 @@ import eventsourcing.domain.EventPublisher
 
 /**
  * Store event streams in memory
+ * Not thread-safe
  */
 class InMemoryEventStore(eventPublisher : EventPublisher<Event>) : BaseEventStore(eventPublisher) {
     private val streams: MutableMap<StreamKey,  MutableList<EventDescriptor>> = mutableMapOf()

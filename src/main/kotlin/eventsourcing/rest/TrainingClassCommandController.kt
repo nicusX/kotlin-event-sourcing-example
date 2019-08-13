@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import javax.validation.Valid
 
+// FIXME rewrite using Routing DSL and coRouter
+//         eg https://medium.com/@hantsy/using-kotlin-coroutines-with-spring-d2784a300bda
 @RestController
 class TrainingClassCommandController(private val handler: TrainingClassCommandHandler) {
 

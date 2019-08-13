@@ -1,7 +1,7 @@
 logging:
   level:
     org.springframework: ERROR
-    eventsourcing: DEBUG
+    eventsourcing: TRACE
 
 spring:
   main:

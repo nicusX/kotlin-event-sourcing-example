@@ -2,20 +2,19 @@ package eventsourcing
 
 import eventsourcing.domain.*
 import eventsourcing.eventstore.InMemoryEventStore
-import eventsourcing.messagebus.InMemoryBus
+import eventsourcing.messagebus.AsyncInMemoryBus
 import eventsourcing.readmodel.InMemoryDatastore
-import eventsourcing.readmodel.TrainingClassDTO
 import eventsourcing.readmodel.TrainingClassView
+import kotlinx.coroutines.GlobalScope
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
-import java.time.LocalDate
 
 @SpringBootApplication
 class KotlinBootApplication {
 
-    val trainingClassView = TrainingClassView(InMemoryDatastore<TrainingClassDTO>())
-    val eventBus : EventPublisher<Event> = InMemoryBus().register(trainingClassView)
+    val trainingClassView = TrainingClassView(InMemoryDatastore())
+    val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope).register(trainingClassView)
     val eventStore : EventStore = InMemoryEventStore(eventBus)
     val trainingClassCommandHandler : TrainingClassCommandHandler = TrainingClassCommandHandler(TrainingClassRepository(eventStore))
 

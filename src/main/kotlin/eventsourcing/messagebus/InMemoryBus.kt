@@ -5,6 +5,9 @@ import eventsourcing.domain.EventPublisher
 import eventsourcing.domain.Handles
 import org.slf4j.LoggerFactory
 
+/**
+ * Simple, in-memory event-bus, broadcasting events to all registered handlers synchronously
+ */
 class InMemoryBus : EventPublisher<Event> {
     private val handlers : MutableList<Handles<Event>> = mutableListOf()
 
