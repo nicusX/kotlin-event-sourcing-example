@@ -56,10 +56,10 @@ internal class TrainingClassTest {
                     .enrollStudent("student-001")
         }
 
-        sut.unenrollStudent("student-001")
+        sut.unenrollStudent("student-001", "some reasons")
 
         assertThatAggregateUncommitedChanges(sut)
-                .onlyContainsInOrder( listOf(StudentUnenrolled(classId, "student-001")) )
+                .onlyContainsInOrder( listOf(StudentUnenrolled(classId, "student-001", "some reasons")) )
     }
 
     @Test
@@ -69,7 +69,7 @@ internal class TrainingClassTest {
         }
 
         assertThrows<StudentNotEnrolledException> {
-            sut.unenrollStudent("student-001")
+            sut.unenrollStudent("student-001", "some reasons")
         }
 
         assertThatAggregateUncommitedChanges(sut)

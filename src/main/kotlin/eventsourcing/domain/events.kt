@@ -32,9 +32,9 @@ data class StudentEnrolled (
             this.copy(version = version)
 }
 
-// TODO add "reason"
 data class StudentUnenrolled(val classId: ClassID,
                              val studentId: StudentID,
+                             val reason: String,
                              val version: Long? = null) : Event(version) {
     override fun copyWithVersion(version: Long): StudentUnenrolled =
             this.copy(version = version)

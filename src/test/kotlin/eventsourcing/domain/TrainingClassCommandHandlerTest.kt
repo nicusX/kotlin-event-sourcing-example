@@ -53,12 +53,12 @@ class TrainingClassCommandHandlerTest {
         }
         val sut = TrainingClassCommandHandler(repository)
 
-        val command = UnenrollStudent(classId, "a-student", 43L)
+        val command = UnenrollStudent(classId, "a-student", "some reasons",43L)
         val result = sut.handle(command)
 
         assertThat(result).isNotNull // Not really meaningful as the return value is not nullable
 
-        verify(clazz).unenrollStudent(eq("a-student"))
+        verify(clazz).unenrollStudent(eq("a-student"), eq("some reasons"))
         verify(repository).getById(eq(classId))
         verify(repository).save( any<TrainingClass>(), eq(43L) )
     }

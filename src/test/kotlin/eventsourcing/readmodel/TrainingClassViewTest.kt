@@ -72,7 +72,7 @@ internal class TrainingClassViewTest {
                 students = listOf(studentId),
                 version = version ))
 
-        val event = StudentUnenrolled(classId, studentId, 3L)
+        val event = StudentUnenrolled(classId, studentId, "some reasons",3L)
         sut.handle(event)
 
         verify(datastore).getById(eq(classId))

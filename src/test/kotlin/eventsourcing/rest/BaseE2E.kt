@@ -78,6 +78,7 @@ internal abstract class BaseE2E(val template : TestRestTemplate){
     protected fun unenrollStudent_isAccepted(classUri: URI, student: String, classVersion: Long) {
         template.assertThatApiPost<Any, UnenrollStudentRequest>("$classUri/unenroll_student", UnenrollStudentRequest(
                 studentId = student,
+                reason = "some reasons",
                 classVersion = classVersion))
                 .returnsStatusCode(HttpStatus.ACCEPTED)
     }
@@ -85,6 +86,7 @@ internal abstract class BaseE2E(val template : TestRestTemplate){
     protected fun unenrollStudent_isRejectedWith422(classUri: URI, student: String, classVersion: Long) {
         template.assertThatApiPost<Any, UnenrollStudentRequest>("$classUri/unenroll_student", UnenrollStudentRequest(
                 studentId = student,
+                reason = "some reasons",
                 classVersion = classVersion))
                 .returnsStatusCode(HttpStatus.UNPROCESSABLE_ENTITY)
     }

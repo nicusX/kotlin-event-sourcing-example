@@ -1,5 +1,7 @@
 package eventsourcing.domain
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
 
@@ -51,6 +53,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     // may have side-effects
 
     fun enrollStudent(studentId: StudentID) : TrainingClass {
+        log.debug("Enrolling student {} to class {}", studentId, this.id)
         if ( this.enrolledStudents.contains(studentId))
             throw StudentAlreadyEnrolledException(studentId, this.id)
 
@@ -61,12 +64,12 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
         return this
     }
 
-    // TODO add a "reason"
-    fun unenrollStudent(studentId: StudentID) : TrainingClass {
+    fun unenrollStudent(studentId: StudentID, reason: String) : TrainingClass {
+        log.debug("Enrolling student {} from class {}. Reason: '{}'", studentId, this.id, reason)
         if (!this.enrolledStudents.contains(studentId))
             throw StudentNotEnrolledException(this.id, studentId)
 
-        applyChangeAndQueueEvent(StudentUnenrolled(this.id, studentId))
+        applyChangeAndQueueEvent(StudentUnenrolled(this.id, studentId, reason))
         return this
     }
 
@@ -77,6 +80,8 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
             trainingClass.applyChangeAndQueueEvent(NewClassScheduled(classId, title, date, size))
             return trainingClass
         }
+
+        val log : Logger = LoggerFactory.getLogger(TrainingClass::class.java)
     }
 }
 

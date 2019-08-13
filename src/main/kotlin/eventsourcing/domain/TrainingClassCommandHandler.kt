@@ -31,7 +31,7 @@ class TrainingClassCommandHandler(private val repository: TrainingClassRepositor
         log.debug("Handling command: {}", command)
 
         val clazz = repository.getById(command.classId)
-        clazz.unenrollStudent(command.studentId)
+        clazz.unenrollStudent(command.studentId, command.reason)
         repository.save(clazz, command.originalVersion)
 
         return UnenrollStudentSuccess

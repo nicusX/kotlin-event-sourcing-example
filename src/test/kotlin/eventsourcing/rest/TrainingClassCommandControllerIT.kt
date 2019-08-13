@@ -125,7 +125,7 @@ internal class TrainingClassCommandControllerIT() {
     }
 
 
-    val unenrollStudentRequest = UnenrollStudentRequest(studentId, 1L)
+    val unenrollStudentRequest = UnenrollStudentRequest(studentId, "some reasons", 1L)
 
     @Test
     fun `given and Unenroll Student request, when the command is successfully processed, then it returns 202 ACCEPTED with class Location header`() {

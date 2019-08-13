@@ -21,7 +21,7 @@ internal class InMemoryEventStoreTest {
         val sut: EventStore = givenAnInMemoryEventStore (
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                     StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                    StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                    StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons"),
                     StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) })
 
@@ -29,7 +29,7 @@ internal class InMemoryEventStoreTest {
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
-                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", 1),
+                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons", 1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
         assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
@@ -40,7 +40,7 @@ internal class InMemoryEventStoreTest {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2","some reasons"),
                         StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) } )
 
@@ -59,7 +59,7 @@ internal class InMemoryEventStoreTest {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons"),
                         StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) } )
 
@@ -81,7 +81,7 @@ internal class InMemoryEventStoreTest {
         val sut : EventStore = givenAnInMemoryEventStore (
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons"),
                         StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) },
                 { withSavedEvents(AGGREGATE_TYPE, ANOTHER_AGGREGATE_ID, listOf(
@@ -94,7 +94,7 @@ internal class InMemoryEventStoreTest {
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
-                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", 1),
+                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons",1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
         assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
@@ -105,7 +105,7 @@ internal class InMemoryEventStoreTest {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                        StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons"),
                         StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) } )
 
@@ -121,13 +121,13 @@ internal class InMemoryEventStoreTest {
 
         val newEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
-                StudentUnenrolled(AN_AGGREGATE_ID, "student-2"),
+                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons"),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3"))
         sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, newEvents)
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
-                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", 1),
+                StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons", 1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
         for(expectedEvent in expectedVersionedEvents)

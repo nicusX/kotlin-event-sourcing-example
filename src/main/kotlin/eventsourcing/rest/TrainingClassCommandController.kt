@@ -2,7 +2,6 @@ package eventsourcing.rest
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import eventsourcing.domain.*
-import eventsourcing.readmodel.RecordNotFound
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import javax.validation.Valid
 
-// FIXME rewrite using Routing DSL and coRouter
+// TODO rewrite using Routing DSL and coRouter
 //         eg https://medium.com/@hantsy/using-kotlin-coroutines-with-spring-d2784a300bda
 @RestController
 class TrainingClassCommandController(private val handler: TrainingClassCommandHandler) {
@@ -74,6 +73,6 @@ data class EnrollStudentRequest(val studentId: String, val classVersion: Long) {
     fun toCommandWithClassId(classId: String): EnrollStudent = EnrollStudent(classId, studentId, classVersion)
 }
 
-data class UnenrollStudentRequest(val studentId: String, val classVersion: Long) {
-    fun toCommandWithClassId(classId: String): UnenrollStudent = UnenrollStudent(classId, studentId, classVersion)
+data class UnenrollStudentRequest(val studentId: String, val reason : String, val classVersion: Long) {
+    fun toCommandWithClassId(classId: String): UnenrollStudent = UnenrollStudent(classId, studentId, reason, classVersion)
 }
