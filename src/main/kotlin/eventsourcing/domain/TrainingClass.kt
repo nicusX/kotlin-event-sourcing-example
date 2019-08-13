@@ -7,13 +7,13 @@ import java.util.*
 
 typealias ClassID = String
 
-object TrainingClassAggregateType : AggregateType {
-    override fun toString() = "class"
-}
-
 class TrainingClass(id: ClassID) : AggregateRoot(id) {
 
-    override fun aggregateType() = TrainingClassAggregateType
+    object TYPE : AggregateType {
+        override fun toString() = "class"
+    }
+
+    override fun aggregateType() = TYPE
 
     private var availableSpots = 0
     private var enrolledStudents: MutableSet<StudentID> = mutableSetOf()

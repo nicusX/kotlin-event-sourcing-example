@@ -2,6 +2,7 @@ package eventsourcing.rest
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import eventsourcing.domain.*
+import eventsourcing.domain.commandhandlers.ScheduleNewClassSuccess
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,17 +16,17 @@ import javax.validation.Valid
 // TODO rewrite using Routing DSL and coRouter
 //         eg https://medium.com/@hantsy/using-kotlin-coroutines-with-spring-d2784a300bda
 @RestController
-class TrainingClassCommandController(private val handler: TrainingClassCommandHandler) {
+class TrainingClassCommandController(private val dispatcher: CommandDispatcher) {
 
     @PostMapping("/classes/schedule_new")
     fun scheduleNewClass(@Valid @RequestBody req: ScheduleNewClassRequest): ResponseEntity<Any>
-        = acceptedResponse( handler.handle(req.toCommand()).classId )
+        = acceptedResponse( (dispatcher.handle(req.toCommand()) as ScheduleNewClassSuccess).classId )
 
 
     @PostMapping("/classes/{classId}/enroll_student")
     fun enrollStudent(@PathVariable classId: String, @Valid @RequestBody req: EnrollStudentRequest): ResponseEntity<Any> =
             try {
-                handler.handle(req.toCommandWithClassId(classId))
+                dispatcher.handle(req.toCommandWithClassId(classId))
                 acceptedResponse( classId )
             } catch (nf: AggregateNotFoundException) {
                 ResponseEntity.notFound().build()
@@ -41,7 +42,7 @@ class TrainingClassCommandController(private val handler: TrainingClassCommandHa
     @PostMapping("/classes/{classId}/unenroll_student")
     fun unenrollStudent(@PathVariable classId: String, @Valid @RequestBody req: UnenrollStudentRequest) : ResponseEntity<Any> =
             try {
-                handler.handle(req.toCommandWithClassId(classId))
+                dispatcher.handle(req.toCommandWithClassId(classId))
                 acceptedResponse( classId )
             } catch (nf: AggregateNotFoundException) {
                 ResponseEntity.notFound().build()

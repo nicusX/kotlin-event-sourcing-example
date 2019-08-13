@@ -1,41 +1,42 @@
-package eventsourcing.domain
+package eventsourcing.domain.commandhandlers
 
 import com.nhaarman.mockitokotlin2.*
+import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
+import eventsourcing.domain.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class TrainingClassCommandHandlerTest {
+internal class TrainingClassCommandHandlersTest {
 
     @Test
-    fun `when handling a ScheduleNewClass command, it should save a new Class with a NewClassScheduled uncommited event and return a successful result`() {
+    fun `given a ScheduleNewClass command, when handled, it should save a new Class with a NewClassScheduled uncommited event and return a successful result with the ID of the class`() {
         val repository = mock<TrainingClassRepository>()
-        val sut = TrainingClassCommandHandler(repository)
+        val fut = handleScheduleNewClass(repository)
 
         val command = ScheduleNewClass("class-title", LocalDate.now(), 10)
-        val result = sut.handle(command)
+        val result = fut(command)
 
         assertThat(result.classId).isNotBlank()
 
-        verify(repository).save( check {
+        verify(repository).save(check {
             assertThat(it).isInstanceOf(TrainingClass::class.java)
-            val uncommittedEvents = it.getUncommittedChanges()
-            assertThat(uncommittedEvents).hasSize(1)
-            assertThat(uncommittedEvents.first()).isInstanceOf( NewClassScheduled::class.java )
+            assertThatAggregateUncommitedChanges(it).onlyContainsAnEventOfType(NewClassScheduled::class.java)
         }, isNull())
     }
 
+
     @Test
-    fun `when handing an EnrollStudent command, it should retrieve the class by ID, enroll the student and save it back with the expected version, and return a successful result`() {
+    fun `given a EnrollStudent command, when handled, it should retrieve the class by ID, enroll the student and save it back with the expected version, and return a successful result`() {
         val classId: ClassID = "a-class"
         val clazz = mock<TrainingClass>()
         val repository = mock<TrainingClassRepository> {
             on { getById(any())}.doReturn( clazz )
         }
-        val sut = TrainingClassCommandHandler(repository)
+        val fut = handleEnrollStudent(repository)
 
         val command = EnrollStudent(classId, "a-student", 43L)
-        val result = sut.handle(command)
+        val result = fut(command)
 
         assertThat(result).isNotNull // Not really meaningful as the return value is not nullable
 
@@ -45,16 +46,16 @@ class TrainingClassCommandHandlerTest {
     }
 
     @Test
-    fun `when handling an UnenrollStudent command, it should retrieve the class by ID, unenroll the student and save it back with the expected version, and return a successful result`() {
+    fun `given an UnenrollStudent command, when handled, it should retrieve the class by ID, unenroll the student and save it back with the expected version, and return a successful result`() {
         val classId: ClassID = "a-class"
         val clazz = mock<TrainingClass>()
         val repository = mock<TrainingClassRepository> {
             on { getById(any())}.doReturn( clazz )
         }
-        val sut = TrainingClassCommandHandler(repository)
+        val fut = handleUnenrollStudent(repository)
 
         val command = UnenrollStudent(classId, "a-student", "some reasons",43L)
-        val result = sut.handle(command)
+        val result = fut(command)
 
         assertThat(result).isNotNull // Not really meaningful as the return value is not nullable
 
@@ -62,5 +63,4 @@ class TrainingClassCommandHandlerTest {
         verify(repository).getById(eq(classId))
         verify(repository).save( any<TrainingClass>(), eq(43L) )
     }
-
 }

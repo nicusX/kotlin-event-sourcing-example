@@ -9,6 +9,8 @@ import java.time.LocalDate
 
 internal class TrainingClassTest {
 
+    // FIXME add test for scheduleNewClass
+
     @Test
     fun `given a class with many spots, when I enroll a student, then Student Enrolled event is queued`() {
         val (sut, classId) = given {

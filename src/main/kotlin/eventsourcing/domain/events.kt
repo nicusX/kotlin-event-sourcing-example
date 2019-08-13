@@ -9,7 +9,6 @@ abstract class Event(private val version: Long?) : Message() {
     abstract fun copyWithVersion(version: Long): Event
 }
 
-
 data class NewClassScheduled (
         val classId: ClassID,
         val title: String,
@@ -22,8 +21,6 @@ data class NewClassScheduled (
             this.copy(version = version)
 }
 
-
-
 data class StudentEnrolled (
         val classId: ClassID,
         val studentId: StudentID,
@@ -32,10 +29,19 @@ data class StudentEnrolled (
             this.copy(version = version)
 }
 
-data class StudentUnenrolled(val classId: ClassID,
+data class StudentUnenrolled (val classId: ClassID,
                              val studentId: StudentID,
                              val reason: String,
                              val version: Long? = null) : Event(version) {
     override fun copyWithVersion(version: Long): StudentUnenrolled =
+            this.copy(version = version)
+}
+
+data class NewStudentRegistered (
+        val studentId: StudentID,
+        val email : EMail,
+        val fullName: String,
+        val version: Long? = null) : Event(version) {
+    override fun copyWithVersion(version: Long): NewStudentRegistered =
             this.copy(version = version)
 }

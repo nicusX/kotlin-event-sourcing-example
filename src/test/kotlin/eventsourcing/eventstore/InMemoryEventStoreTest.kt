@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 
-val AGGREGATE_TYPE : AggregateType = TrainingClassAggregateType
+val AGGREGATE_TYPE : AggregateType = TrainingClass.TYPE
 const val AN_AGGREGATE_ID : ClassID = "aggr012"
 const val ANOTHER_AGGREGATE_ID : ClassID = "aggr045"
 

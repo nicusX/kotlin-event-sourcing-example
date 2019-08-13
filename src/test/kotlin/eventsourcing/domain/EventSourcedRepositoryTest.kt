@@ -20,7 +20,7 @@ internal class EventSourcedRepositoryTest {
         sut.save(clazz)
 
         assertThat(clazz.getUncommittedChanges()).isEmpty()
-        verify(eventStore, times(1)).saveEvents(eq(TrainingClassAggregateType), eq(clazz.id), argForWhich{ count() == 2  }, isNull())
+        verify(eventStore, times(1)).saveEvents(eq(TrainingClass.TYPE), eq(clazz.id), argForWhich{ count() == 2  }, isNull())
         verifyNoMoreInteractions(eventStore)
     }
 
@@ -28,7 +28,7 @@ internal class EventSourcedRepositoryTest {
     fun `given an event store with events from an aggregate, when I get the aggregate by Id, I have the aggregate and all events for the aggregate are retrieved from the event store`(){
         val classId = "class-id"
         val eventStore = mock<EventStore> {
-            on { getEventsForAggregate(TrainingClassAggregateType, classId) }
+            on { getEventsForAggregate(TrainingClass.TYPE, classId) }
                     .doReturn( listOf(
                             NewClassScheduled(classId,"some-title", LocalDate.now(), 10),
                             StudentEnrolled(classId, "a-student")))
@@ -39,7 +39,7 @@ internal class EventSourcedRepositoryTest {
 
         assertThat(clazz).isNotNull
         assertThat(clazz.getUncommittedChanges()).isEmpty()
-        verify(eventStore).getEventsForAggregate(eq(TrainingClassAggregateType), eq(classId))
+        verify(eventStore).getEventsForAggregate(eq(TrainingClass.TYPE), eq(classId))
         verifyNoMoreInteractions(eventStore)
     }
 
@@ -47,7 +47,7 @@ internal class EventSourcedRepositoryTest {
     fun `given an event store, when I get a non-existing aggregate by Id, then an AggregateNotFoundException is thrown`(){
         val classId = "class-id"
         val eventStore = mock<EventStore> {
-            on { getEventsForAggregate(TrainingClassAggregateType, classId) }.doReturn( null )
+            on { getEventsForAggregate(TrainingClass.TYPE, classId) }.doReturn( null )
         }
         val sut = eventSourcedRepo(eventStore)
 

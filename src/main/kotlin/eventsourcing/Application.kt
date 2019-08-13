@@ -13,13 +13,16 @@ import org.springframework.context.annotation.Bean
 @SpringBootApplication
 class KotlinBootApplication {
 
-    val trainingClassView = TrainingClassView(InMemoryDatastore())
-    val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope).register(trainingClassView)
-    val eventStore : EventStore = InMemoryEventStore(eventBus)
-    val trainingClassCommandHandler : TrainingClassCommandHandler = TrainingClassCommandHandler(TrainingClassRepository(eventStore))
+    private val trainingClassView = TrainingClassView(InMemoryDatastore())
+    private val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope).register(trainingClassView)
+    private val eventStore : EventStore = InMemoryEventStore(eventBus)
+
+    private val classRepository = TrainingClassRepository(eventStore)
+    private val studentRepository = StudentRepository(eventStore)
+    private val commandDispatcher : CommandDispatcher = CommandDispatcher(classRepository, studentRepository)
 
     @Bean fun trainingClassView() = trainingClassView
-    @Bean fun trainingClassCommandHandler() = trainingClassCommandHandler
+    @Bean fun trainingClassCommandHandler() = commandDispatcher
 
 }
 
