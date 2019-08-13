@@ -10,7 +10,7 @@ import eventsourcing.domain.EventPublisher
 class InMemoryEventStore(eventPublisher : EventPublisher<Event>) : BaseEventStore(eventPublisher) {
     private val streams: MutableMap<StreamKey,  MutableList<EventDescriptor>> = mutableMapOf()
 
-    override fun stream(key: StreamKey): Iterable<EventDescriptor> = streams[key]?.toList() ?: emptyList()
+    override fun stream(key: StreamKey): Iterable<EventDescriptor>? = streams[key]?.toList()
 
     override fun isEmptyStream(key: StreamKey): Boolean = streams[key]?.isEmpty() ?: true
 

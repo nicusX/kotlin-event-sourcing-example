@@ -4,6 +4,7 @@ import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.TrainingClass.Companion.scheduleNewClass
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 internal class EventSourcedRepositoryTest {
@@ -19,7 +20,7 @@ internal class EventSourcedRepositoryTest {
         sut.save(clazz)
 
         assertThat(clazz.getUncommittedChanges()).isEmpty()
-        verify(eventStore, times(1)).saveEvents(eq(TrainingClassAggregateType), eq(clazz.id), argForWhich{ count() == 2  }, isNull()) // FIXME add assertion to event size=2
+        verify(eventStore, times(1)).saveEvents(eq(TrainingClassAggregateType), eq(clazz.id), argForWhich{ count() == 2  }, isNull())
         verifyNoMoreInteractions(eventStore)
     }
 
@@ -40,6 +41,19 @@ internal class EventSourcedRepositoryTest {
         assertThat(clazz.getUncommittedChanges()).isEmpty()
         verify(eventStore).getEventsForAggregate(eq(TrainingClassAggregateType), eq(classId))
         verifyNoMoreInteractions(eventStore)
+    }
+
+    @Test
+    fun `given an event store, when I get a non-existing aggregate by Id, then an AggregateNotFoundException is thrown`(){
+        val classId = "class-id"
+        val eventStore = mock<EventStore> {
+            on { getEventsForAggregate(TrainingClassAggregateType, classId) }.doReturn( null )
+        }
+        val sut = eventSourcedRepo(eventStore)
+
+        assertThrows<AggregateNotFoundException> {
+            sut.getById(classId)
+        }
     }
 
 }

@@ -2,7 +2,6 @@ package eventsourcing.domain
 
 import java.time.LocalDate
 
-// FIXME Events should all contain a target aggregate type and ID
 abstract class Event(private val version: Long?) : Message() {
     // TODO find a better way of managing Event.version
     //      The problem is the version is assigned only then the Event is stored in the EventStore
@@ -18,7 +17,7 @@ data class NewClassScheduled (
         val classSize: Int,
         val version: Long? = null) : Event(version) {
 
-    // FIXME any better way than reimplementing in all subclasses?
+    // TODO any better way than reimplementing in all subclasses?
     override fun copyWithVersion(version: Long): NewClassScheduled =
             this.copy(version = version)
 }
@@ -40,5 +39,3 @@ data class StudentUnenrolled(val classId: ClassID,
     override fun copyWithVersion(version: Long): StudentUnenrolled =
             this.copy(version = version)
 }
-
-// FIXME Identify "new" and "final" events?

@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory
  *
  * The interface to publisher is still blocking
  */
-@kotlinx.coroutines.ExperimentalCoroutinesApi
-@kotlinx.coroutines.ObsoleteCoroutinesApi
 class AsyncInMemoryBus(private val scope: CoroutineScope, bufferSize: Int = 100): EventPublisher<Event> {
 
     private val bus = BroadcastChannel<Event>(bufferSize)

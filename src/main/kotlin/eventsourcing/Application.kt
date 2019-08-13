@@ -18,7 +18,6 @@ class KotlinBootApplication {
     val eventStore : EventStore = InMemoryEventStore(eventBus)
     val trainingClassCommandHandler : TrainingClassCommandHandler = TrainingClassCommandHandler(TrainingClassRepository(eventStore))
 
-
     @Bean fun trainingClassView() = trainingClassView
     @Bean fun trainingClassCommandHandler() = trainingClassCommandHandler
 

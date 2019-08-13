@@ -9,8 +9,6 @@ import eventsourcing.domain.Handles
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.jupiter.api.Test
 
-@kotlinx.coroutines.ExperimentalCoroutinesApi
-@kotlinx.coroutines.ObsoleteCoroutinesApi
 internal class AsyncInMemoryBusTest {
     @Test
     fun `given a message bus with registered handlers, when I publish multiple events, then all handlers get notified for each event`() = runBlockingTest {

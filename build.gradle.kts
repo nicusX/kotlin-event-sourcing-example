@@ -35,7 +35,11 @@ dependencies {
 
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
-		freeCompilerArgs = listOf("-Xjsr305=strict")
+		freeCompilerArgs = listOf(
+				"-Xjsr305=strict",
+				"-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
+				"-Xuse-experimental=kotlinx.coroutines.ObsoleteCoroutinesApi"
+				)
 		jvmTarget = "1.8"
 	}
 }

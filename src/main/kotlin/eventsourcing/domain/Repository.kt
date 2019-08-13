@@ -2,6 +2,7 @@ package eventsourcing.domain
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 
 interface Repository<A: AggregateRoot> {
     fun getById(id: AggregateID): A
@@ -22,8 +23,10 @@ abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) 
 
     override fun getById(id: AggregateID): A {
         val aggregate = new(id)
-        log.debug("Retrieve {} by id:{}", aggregate.aggregateType(), id)
+        val aggregateType = aggregate.aggregateType()
+        log.debug("Retrieve {} by id:{}", aggregateType, id)
         val events = store.getEventsForAggregate(aggregate.aggregateType(), id)
+                ?: throw AggregateNotFoundException(aggregateType, id)
         AggregateRoot.loadFromHistory(aggregate, events)
         return aggregate
     }
@@ -33,3 +36,5 @@ abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) 
     }
 }
 
+class AggregateNotFoundException(aggregateType: AggregateType, aggregateID: AggregateID)
+    : Exception("Aggregate not found. ${aggregateType.toString()}:${aggregateID.toString()}")

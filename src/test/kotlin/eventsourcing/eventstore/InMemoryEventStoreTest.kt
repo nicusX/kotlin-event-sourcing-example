@@ -3,6 +3,7 @@ package eventsourcing.eventstore
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatEvents
 import eventsourcing.domain.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -31,7 +32,7 @@ internal class InMemoryEventStoreTest {
                 StudentUnenrolled(AN_AGGREGATE_ID, "student-2", 1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
-        assertThatEvents(extractedEvents).onlyContainsInOrder(expectedVersionedEvents)
+        assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
     }
 
     @Test
@@ -96,11 +97,11 @@ internal class InMemoryEventStoreTest {
                 StudentUnenrolled(AN_AGGREGATE_ID, "student-2", 1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
-        assertThatEvents(extractedEvents).onlyContainsInOrder(expectedVersionedEvents)
+        assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
     }
 
     @Test
-    fun `given an Event Store only containing events of an aggregate, when I retrieve events for a different aggregate, it should fail with AggregateNotFoundException `() {
+    fun `given an Event Store only containing events of an aggregate, when I retrieve events for a different aggregate, it should return no events`() {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -109,9 +110,8 @@ internal class InMemoryEventStoreTest {
                 )) } )
 
         val nonExistingAggregateID = "this-id-does-not-exist"
-        assertThrows<AggregateNotFoundException> {
-            sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
-        }
+        val events : Iterable<Event>? = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
+        assertThat(events).isNull()
     }
 
     @Test

@@ -14,18 +14,16 @@ abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>
 
     protected data class EventDescriptor(val streamKey: StreamKey, val version: Long, val event: Event)
 
-    protected abstract fun stream(key: StreamKey): Iterable<EventDescriptor>
+    protected abstract fun stream(key: StreamKey): Iterable<EventDescriptor>?
 
     protected abstract fun appendEventDescriptor(key: StreamKey, eventDescriptor: EventDescriptor)
 
     protected abstract fun isEmptyStream(key: StreamKey) : Boolean
 
-    // FIXME change the interface to return Iterable<Event>? and let another layer to throw exceptions if the aggregate has no event
-    override fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Iterable<Event> {
+    override fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Iterable<Event>? {
         log.debug("Retrieving events for aggregate {}:{}", aggregateType, aggregateId)
         val key = StreamKey(aggregateType, aggregateId)
-        if( isEmptyStream(key) ) throw AggregateNotFoundException(aggregateType, aggregateId)
-        return stream(key).map{ it.event }
+        return stream(key)?.map{ it.event }
     }
 
     override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Long?) {
@@ -40,7 +38,7 @@ abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>
     private fun checkLatestEventVersionInStreamMatches(key: StreamKey, expectedVersion: Long) {
         if ( !isEmptyStream(key) ) {
             log.trace("Checking whether the latest event in Stream {} matches {}", key, expectedVersion)
-            val latestEventDescriptor = stream(key).last()
+            val latestEventDescriptor = stream(key)!!.last()
             if ( latestEventDescriptor.version != expectedVersion )
                 throw ConcurrencyException(key.aggregateType, key.aggregateID, expectedVersion, latestEventDescriptor.version)
         }
