@@ -32,10 +32,10 @@ data class TrainingClassDTO (
 
 class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Handles<Event> {
 
-    fun getById(classId: ClassID) : TrainingClassDTO =
+    fun getClassById(classId: ClassID) : TrainingClassDTO =
             datastore.get(classId)
 
-    fun list() : List<TrainingClassDTO> =
+    fun listClasses() : List<TrainingClassDTO> =
             datastore.list()
 
     override fun handle(event: Event) {
@@ -76,5 +76,4 @@ class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Ha
     companion object {
         private val log : Logger = LoggerFactory.getLogger(TrainingClassView::class.java)
     }
-
 }

@@ -18,12 +18,12 @@ class TrainingClassReadController(private val view: TrainingClassView) {
     // TODO Return a simplified DTO in the list
     @GetMapping("/classes")
     fun listTrainingClasses() :  ResponseEntity<List<TrainingClassDTO>>
-            = ResponseEntity.ok(view.list())
+            = ResponseEntity.ok(view.listClasses())
 
     @GetMapping("/classes/{classId}")
     fun getTrainingClass(@PathVariable classId: String) : ResponseEntity<TrainingClassDTO>
         =  try {
-            ResponseEntity.ok(view.getById(classId))
+            ResponseEntity.ok(view.getClassById(classId))
         } catch (e: RecordNotFound) {
             ResponseEntity.notFound().build()
         }

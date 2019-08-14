@@ -52,7 +52,7 @@ internal class TrainingClassReadControllerIT() {
 
     @Test
     fun `get an existing Class by ID should return the class representation in JSON`() {
-        whenever(trainingClassView.getById(eq("001"))).thenReturn(aClassDTO)
+        whenever(trainingClassView.getClassById(eq("001"))).thenReturn(aClassDTO)
 
         mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk)
@@ -63,7 +63,7 @@ internal class TrainingClassReadControllerIT() {
 
     @Test
     fun `get a non-existing Class by ID should return 404`() {
-        whenever(trainingClassView.getById(eq("001")))
+        whenever(trainingClassView.getClassById(eq("001")))
                 .thenAnswer{ throw RecordNotFound("001") } // .thenThrows does not work as RecordNotFound is a checked exception
 
 
@@ -73,7 +73,7 @@ internal class TrainingClassReadControllerIT() {
 
     @Test
     fun `list Classes should return all `() {
-        whenever(trainingClassView.list()).thenReturn( listOf(aClassDTO, anotherClassDTO))
+        whenever(trainingClassView.listClasses()).thenReturn( listOf(aClassDTO, anotherClassDTO))
 
         mvc.perform(get("/classes").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk)
