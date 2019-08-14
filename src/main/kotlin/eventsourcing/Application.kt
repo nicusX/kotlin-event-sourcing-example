@@ -15,7 +15,9 @@ class KotlinBootApplication {
 
     private val trainingClassView = TrainingClassView(InMemoryDatastore<TrainingClassDTO>())
     private val studentView = StudentView(InMemoryDatastore<StudentDTO>())
-    private val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope).register(trainingClassView)
+    private val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope)
+            .register(trainingClassView)
+            .register(studentView)
     private val eventStore : EventStore = InMemoryEventStore(eventBus)
 
     private val classRepository = TrainingClassRepository(eventStore)

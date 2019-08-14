@@ -1,5 +1,10 @@
-package eventsourcing.api
+package eventsourcing
 
+import eventsourcing.api.EnrollStudentRequest
+import eventsourcing.api.RegisterNewStudentRequest
+import eventsourcing.api.ScheduleNewClassRequest
+import eventsourcing.api.UnenrollStudentRequest
+import eventsourcing.readmodels.StudentDTO
 import eventsourcing.readmodels.TrainingClassDTO
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
@@ -13,7 +18,7 @@ import java.time.LocalDate
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-internal abstract class BaseE2E(val template: TestRestTemplate) {
+internal abstract class BaseApiE2ETest(val template: TestRestTemplate) {
 
     protected fun listClasses_isOk(): Int =
             template.assertThatApiGet<List<Any>>("/classes")
@@ -26,6 +31,25 @@ internal abstract class BaseE2E(val template: TestRestTemplate) {
         assertThat(size).isEqualTo(expectedNofClasses)
         return size
     }
+
+    protected fun listStudents_isOk(): Int =
+            template.assertThatApiGet<List<Any>>("/students")
+                    .returnsStatusCode(HttpStatus.OK)
+                    .extractBody().size
+
+    protected fun listStudents_isOk_withNofStudents(expectedNofStudents: Int) : Int {
+        val size = listStudents_isOk()
+        assertThat(size).isEqualTo(expectedNofStudents)
+        return size
+    }
+
+    protected fun registerStudent_withEmailAndFullName_isAccepted(email: String, fullName: String) : URI =
+            template.assertThatApiPost<Any, RegisterNewStudentRequest>("/students/register",
+                    RegisterNewStudentRequest(
+                            email = email,
+                            fullName = fullName ))
+                    .returnsStatusCode(HttpStatus.ACCEPTED)
+                    .extractLocation()
 
     protected fun scheduleNewClass_withSize_isAccepted(size: Int): URI =
             template.assertThatApiPost<Any, ScheduleNewClassRequest>("/classes/schedule_new",
@@ -44,12 +68,18 @@ internal abstract class BaseE2E(val template: TestRestTemplate) {
                     .extractBody()
 
     protected fun getClass_isOk_withVersion_andWithStudents(classUri: URI, expectedVersion: Long, vararg students: String): TrainingClassDTO {
-        // FIXME add a retry logic...
         val clazz = getClass_isOK_withVersion(classUri, expectedVersion)
         for (student in students)
             Assertions.assertThat(clazz.students).contains(student)
         return clazz
     }
+
+    protected fun getStudent_isOk_withVersion(studentUri: URI, expectedVersion: Long): StudentDTO =
+            // FIXME add a retry logic
+            template.assertThatApiGet<StudentDTO>(studentUri)
+                    .returnsStatusCode(HttpStatus.OK)
+                    .returnsStudentWithVersion(expectedVersion)
+                    .extractBody()
 
 
     protected fun enrollStudent_isAccepted(classUri: URI, student: String, classVersion: Long) {
@@ -107,6 +137,11 @@ internal abstract class BaseE2E(val template: TestRestTemplate) {
 
         fun returnsClassWithVersion(expectedVersion: Long): ApiAssert<E> {
             Assertions.assertThat((actual.body as TrainingClassDTO).version).isEqualTo(expectedVersion)
+            return this
+        }
+
+        fun returnsStudentWithVersion(expectedVersion: Long): ApiAssert<E> {
+            Assertions.assertThat((actual.body as StudentDTO).version).isEqualTo(expectedVersion)
             return this
         }
 

@@ -1,14 +1,26 @@
 package eventsourcing
 
-import eventsourcing.api.BaseE2E
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.lang.Thread.sleep
 
-internal class TrainingClassApiEnd2EndTests(@Autowired template : TestRestTemplate) : BaseE2E(template) {
+internal class ApiEnd2EndTests(@Autowired template : TestRestTemplate) : BaseApiE2ETest(template) {
 
     @Test
-    fun `HAPPY | Schedule Class + Enroll a Student + Enroll another Sudent + Unenroll first Student`(){
+    fun `HAPPY | Register a Student + Register another Student + Schedule Class + Enroll a Student + Enroll another Sudent + Unenroll first Student`(){
+
+        val nOfStudents = listStudents_isOk()
+
+        val aStudentURI = registerStudent_withEmailAndFullName_isAccepted("student1@ema.il", "First Student")
+        val aStudent = getStudent_isOk_withVersion(aStudentURI, 0L)
+
+        val anotherStudentURI = registerStudent_withEmailAndFullName_isAccepted("student2@ema.il", "Second Student")
+        val anotherStudent = getStudent_isOk_withVersion(anotherStudentURI, 0L)
+
+        listStudents_isOk_withNofStudents(nOfStudents + 2)
+
+
         val nOfClasses = listClasses_isOk()
 
         val classURI = scheduleNewClass_withSize_isAccepted(10)
@@ -17,20 +29,20 @@ internal class TrainingClassApiEnd2EndTests(@Autowired template : TestRestTempla
 
         listClasses_isOk_withNofClasses(nOfClasses + 1)
 
-        enrollStudent_isAccepted(classURI, "STUDENT001", expectedClassVersion)
+        enrollStudent_isAccepted(classURI, aStudent.studentId, expectedClassVersion)
         expectedClassVersion++
 
-        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, "STUDENT001")
+        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, aStudent.studentId)
 
-        enrollStudent_isAccepted(classURI, "STUDENT002", expectedClassVersion)
+        enrollStudent_isAccepted(classURI, anotherStudent.studentId, expectedClassVersion)
         expectedClassVersion++
 
-        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, "STUDENT001", "STUDENT002")
+        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, aStudent.studentId, anotherStudent.studentId)
 
-        unenrollStudent_isAccepted(classURI,"STUDENT001", expectedClassVersion)
+        unenrollStudent_isAccepted(classURI,aStudent.studentId, expectedClassVersion)
         expectedClassVersion++
 
-        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, "STUDENT002")
+        getClass_isOk_withVersion_andWithStudents(classURI, expectedClassVersion, anotherStudent.studentId)
 
     }
 
@@ -68,4 +80,6 @@ internal class TrainingClassApiEnd2EndTests(@Autowired template : TestRestTempla
 
         unenrollStudent_isRejectedWith422(classURI, "STUDENT999", expectedClassVersion)
     }
+
+    // FIXME test: `UNHAPPY | Register a Student, Register another Student with the same email and get rejected`
 }
