@@ -1,8 +1,7 @@
-package eventsourcing.domain.commandhandlers
+package eventsourcing.domain
 
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
-import eventsourcing.domain.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

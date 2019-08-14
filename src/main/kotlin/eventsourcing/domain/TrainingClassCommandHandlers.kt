@@ -1,6 +1,6 @@
-package eventsourcing.domain.commandhandlers
+package eventsourcing.domain
 
-import eventsourcing.domain.*
+import eventsourcing.api.CommandSuccess
 
 data class ScheduleNewClassSuccess(val classId: ClassID) : CommandSuccess
 

@@ -1,6 +1,6 @@
 package eventsourcing
 
-import eventsourcing.rest.BaseE2E
+import eventsourcing.api.BaseE2E
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.client.TestRestTemplate

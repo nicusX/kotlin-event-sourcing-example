@@ -1,5 +1,6 @@
 package eventsourcing
 
+import eventsourcing.api.CommandDispatcher
 import eventsourcing.domain.*
 import eventsourcing.eventstore.InMemoryEventStore
 import eventsourcing.messagebus.AsyncInMemoryBus

@@ -1,17 +1,18 @@
-package eventsourcing.domain
+package eventsourcing.api
 
-import eventsourcing.domain.commandhandlers.handleEnrollStudent
-import eventsourcing.domain.commandhandlers.handleRegisterNewStudent
-import eventsourcing.domain.commandhandlers.handleScheduleNewClass
-import eventsourcing.domain.commandhandlers.handleUnenrollStudent
+import eventsourcing.domain.*
+import eventsourcing.domain.handleEnrollStudent
+import eventsourcing.domain.handleRegisterNewStudent
+import eventsourcing.domain.handleScheduleNewClass
+import eventsourcing.domain.handleUnenrollStudent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 
 /**
  * Command handler dispatcher
- *
- * TODO Do we really need a dispatcher?
+ * This class is doing nothing more than wiring up all command handlers and their dependencies, to be injected
+ * into command controllers
  */
 class CommandDispatcher(private val classRepo: TrainingClassRepository, private val studentRepo : StudentRepository) {
 

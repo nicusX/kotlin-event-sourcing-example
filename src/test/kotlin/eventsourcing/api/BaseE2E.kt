@@ -1,4 +1,4 @@
-package eventsourcing.rest
+package eventsourcing.api
 
 import eventsourcing.readmodels.TrainingClassDTO
 import org.assertj.core.api.AbstractAssert
@@ -13,15 +13,15 @@ import java.time.LocalDate
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-internal abstract class BaseE2E(val template : TestRestTemplate){
+internal abstract class BaseE2E(val template: TestRestTemplate) {
 
-    protected fun listClasses_isOk() : Int =
+    protected fun listClasses_isOk(): Int =
             template.assertThatApiGet<List<Any>>("/classes")
                     .returnsStatusCode(HttpStatus.OK)
                     .extractBody().size
 
 
-    protected fun listClasses_isOk_withNofClasses(expectedNofClasses: Int) : Int {
+    protected fun listClasses_isOk_withNofClasses(expectedNofClasses: Int): Int {
         val size = listClasses_isOk()
         assertThat(size).isEqualTo(expectedNofClasses)
         return size
@@ -37,12 +37,14 @@ internal abstract class BaseE2E(val template : TestRestTemplate){
                     .extractLocation()
 
     protected fun getClass_isOK_withVersion(classUri: URI, expectedVersion: Long): TrainingClassDTO =
+            // FIXME add a retry logic: it may fail if triggered immediately after a command, as read model update is asynchronous
             template.assertThatApiGet<TrainingClassDTO>(classUri)
                     .returnsStatusCode(HttpStatus.OK)
                     .returnsClassWithVersion(expectedVersion)
                     .extractBody()
 
     protected fun getClass_isOk_withVersion_andWithStudents(classUri: URI, expectedVersion: Long, vararg students: String): TrainingClassDTO {
+        // FIXME add a retry logic...
         val clazz = getClass_isOK_withVersion(classUri, expectedVersion)
         for (student in students)
             Assertions.assertThat(clazz.students).contains(student)
@@ -91,38 +93,37 @@ internal abstract class BaseE2E(val template : TestRestTemplate){
     }
 
 
-
     private class ApiAssert<E>(actual: ResponseEntity<E>) : AbstractAssert<ApiAssert<E>, ResponseEntity<E>>(actual, ApiAssert::class.java) {
 
-        fun returnsStatusCode(expectedStatus: HttpStatus) : ApiAssert<E> {
+        fun returnsStatusCode(expectedStatus: HttpStatus): ApiAssert<E> {
             Assertions.assertThat(actual.statusCode).isEqualTo(expectedStatus)
             return this
         }
 
-        fun returnsBodyWithListOfSize(expectedSize: Int) : ApiAssert<E> {
+        fun returnsBodyWithListOfSize(expectedSize: Int): ApiAssert<E> {
             Assertions.assertThat(actual.body as List<*>).hasSize(expectedSize)
             return this
         }
 
-        fun returnsClassWithVersion(expectedVersion: Long) : ApiAssert<E> {
+        fun returnsClassWithVersion(expectedVersion: Long): ApiAssert<E> {
             Assertions.assertThat((actual.body as TrainingClassDTO).version).isEqualTo(expectedVersion)
             return this
         }
 
         fun extractLocation(): URI = actual.headers.location!!
 
-        fun extractBody() : E = actual.body!!
+        fun extractBody(): E = actual.body!!
     }
 
-    private inline fun <reified E> TestRestTemplate.assertThatApiGet(uri: URI) : ApiAssert<E> =
+    private inline fun <reified E> TestRestTemplate.assertThatApiGet(uri: URI): ApiAssert<E> =
             ApiAssert(this.getForEntity(uri, E::class.java))
 
-    private inline fun <reified E> TestRestTemplate.assertThatApiGet(uri: String) : ApiAssert<E> =
+    private inline fun <reified E> TestRestTemplate.assertThatApiGet(uri: String): ApiAssert<E> =
             this.assertThatApiGet(URI(uri))
 
-    private inline fun <reified E, R> TestRestTemplate.assertThatApiPost(uri: URI, requestBody: R) : ApiAssert<E> =
+    private inline fun <reified E, R> TestRestTemplate.assertThatApiPost(uri: URI, requestBody: R): ApiAssert<E> =
             ApiAssert(this.postForEntity(uri, requestBody, E::class.java))
 
-    private inline fun <reified E, R> TestRestTemplate.assertThatApiPost(uri: String, requestBody: R) : ApiAssert<E> =
+    private inline fun <reified E, R> TestRestTemplate.assertThatApiPost(uri: String, requestBody: R): ApiAssert<E> =
             assertThatApiPost(URI(uri), requestBody)
 }

@@ -1,14 +1,10 @@
-package eventsourcing.domain.commandhandlers
+package eventsourcing.domain
 
 import com.nhaarman.mockitokotlin2.check
 import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
-import eventsourcing.domain.NewStudentRegistered
-import eventsourcing.domain.RegisterNewStudent
-import eventsourcing.domain.Student
-import eventsourcing.domain.StudentRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

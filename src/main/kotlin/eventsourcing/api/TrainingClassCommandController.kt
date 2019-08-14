@@ -1,8 +1,8 @@
-package eventsourcing.rest
+package eventsourcing.api
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import eventsourcing.domain.*
-import eventsourcing.domain.commandhandlers.ScheduleNewClassSuccess
+import eventsourcing.domain.ScheduleNewClassSuccess
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

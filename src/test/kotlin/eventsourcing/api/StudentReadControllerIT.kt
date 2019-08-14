@@ -1,4 +1,4 @@
-package eventsourcing.rest
+package eventsourcing.api
 
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock

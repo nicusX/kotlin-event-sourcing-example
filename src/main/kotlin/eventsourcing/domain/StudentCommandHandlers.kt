@@ -1,6 +1,7 @@
-package eventsourcing.domain.commandhandlers
+package eventsourcing.domain
 
-import eventsourcing.domain.*
+import eventsourcing.api.CommandDispatcher
+import eventsourcing.api.CommandSuccess
 
 data class RegisterNewStudentSuccess(val studentID: StudentID) : CommandSuccess
 

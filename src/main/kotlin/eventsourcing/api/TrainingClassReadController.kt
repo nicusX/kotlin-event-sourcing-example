@@ -1,4 +1,4 @@
-package eventsourcing.rest
+package eventsourcing.api
 
 import eventsourcing.readmodels.RecordNotFound
 import eventsourcing.readmodels.TrainingClassDTO
