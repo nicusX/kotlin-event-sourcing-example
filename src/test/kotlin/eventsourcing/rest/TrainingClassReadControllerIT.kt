@@ -3,7 +3,6 @@ package eventsourcing.rest
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import eventsourcing.readmodels.InMemoryDatastore
 import eventsourcing.readmodels.RecordNotFound
 import eventsourcing.readmodels.TrainingClassDTO
 import eventsourcing.readmodels.TrainingClassView
@@ -13,35 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import java.time.LocalDate
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import java.time.LocalDate
 
 
 @ExtendWith(SpringExtension::class)
-internal class TrainingClassReadControllerIT() {
+internal class TrainingClassReadControllerIT {
 
     lateinit var mvc : MockMvc
     lateinit var trainingClassView : TrainingClassView
-
-    private val aClassDTO = TrainingClassDTO(
-            classId = "001",
-            title = "Class title",
-            date = LocalDate.now(),
-            totalSize = 10,
-            availableSpots = 9,
-            students = listOf("STUDENT-001"),
-            version = 47L)
-
-    private val anotherClassDTO = TrainingClassDTO(
-            classId = "002",
-            title = "Another class title",
-            date = LocalDate.now(),
-            totalSize = 15,
-            availableSpots = 13,
-            students = listOf("STUDENT-001", "STUDENT-002"),
-            version = 3L)
 
     @BeforeEach
     fun setup() {
@@ -51,7 +32,7 @@ internal class TrainingClassReadControllerIT() {
     }
 
     @Test
-    fun `get an existing Class by ID should return the class representation in JSON`() {
+    fun `when I hit the GET Class endpoint with the class ID, then it returns the class representation in JSON`() {
         whenever(trainingClassView.getClassById(eq("001"))).thenReturn(aClassDTO)
 
         mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))
@@ -62,7 +43,7 @@ internal class TrainingClassReadControllerIT() {
     }
 
     @Test
-    fun `get a non-existing Class by ID should return 404`() {
+    fun `when I hit the GET Class endpoint with a non-existing Class ID, then it returns 404`() {
         whenever(trainingClassView.getClassById(eq("001")))
                 .thenAnswer{ throw RecordNotFound("001") } // .thenThrows does not work as RecordNotFound is a checked exception
 
@@ -72,7 +53,7 @@ internal class TrainingClassReadControllerIT() {
     }
 
     @Test
-    fun `list Classes should return all `() {
+    fun `when I hit the GET all Classes, then it returns a JSON representation of a list containing all Classes`() {
         whenever(trainingClassView.listClasses()).thenReturn( listOf(aClassDTO, anotherClassDTO))
 
         mvc.perform(get("/classes").accept(MediaType.APPLICATION_JSON))
@@ -81,12 +62,22 @@ internal class TrainingClassReadControllerIT() {
                 .andExpect(jsonPath("""$.[0].classId""").value(aClassDTO.classId))
                 .andExpect(jsonPath("""$.[1].classId""").value(anotherClassDTO.classId))
     }
-
-
 }
 
-private fun InMemoryDatastore<TrainingClassDTO>.init(vararg classes : TrainingClassDTO) {
-    this.clear()
-    for(clazz in classes)
-        this.save(clazz.classId, clazz)
-}
+private val aClassDTO = TrainingClassDTO(
+        classId = "001",
+        title = "Class title",
+        date = LocalDate.now(),
+        totalSize = 10,
+        availableSpots = 9,
+        students = listOf("STUDENT-001"),
+        version = 47L)
+
+private val anotherClassDTO = TrainingClassDTO(
+        classId = "002",
+        title = "Another class title",
+        date = LocalDate.now(),
+        totalSize = 15,
+        availableSpots = 13,
+        students = listOf("STUDENT-001", "STUDENT-002"),
+        version = 3L)
