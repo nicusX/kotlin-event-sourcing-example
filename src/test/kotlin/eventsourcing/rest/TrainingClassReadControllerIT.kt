@@ -3,10 +3,10 @@ package eventsourcing.rest
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import eventsourcing.readmodel.InMemoryDatastore
-import eventsourcing.readmodel.RecordNotFound
-import eventsourcing.readmodel.TrainingClassDTO
-import eventsourcing.readmodel.TrainingClassView
+import eventsourcing.readmodels.InMemoryDatastore
+import eventsourcing.readmodels.RecordNotFound
+import eventsourcing.readmodels.TrainingClassDTO
+import eventsourcing.readmodels.TrainingClassView
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

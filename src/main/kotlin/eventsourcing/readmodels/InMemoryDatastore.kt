@@ -1,4 +1,4 @@
-package eventsourcing.readmodel
+package eventsourcing.readmodels
 
 /**
  * Simple implementation of Datastore, keeping everything in memory
@@ -6,14 +6,14 @@ package eventsourcing.readmodel
 class InMemoryDatastore<E> : Datastore<E> {
     private val store: MutableMap<String, E> = mutableMapOf()
 
-    @Synchronized override fun getById(id: String): E =
-            store[id] ?: throw RecordNotFound(id)
+    @Synchronized override fun get(key: String): E =
+            store[key] ?: throw RecordNotFound(key)
 
 
     @Synchronized override fun list(): List<E> = store.values.toList()
 
-    @Synchronized override fun save(id: String, entity: E) {
-        store[id] = entity
+    @Synchronized override fun save(key: String, entity: E) {
+        store[key] = entity
     }
 
     fun clear() {

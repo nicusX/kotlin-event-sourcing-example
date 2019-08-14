@@ -3,8 +3,8 @@ package eventsourcing
 import eventsourcing.domain.*
 import eventsourcing.eventstore.InMemoryEventStore
 import eventsourcing.messagebus.AsyncInMemoryBus
-import eventsourcing.readmodel.InMemoryDatastore
-import eventsourcing.readmodel.TrainingClassView
+import eventsourcing.readmodels.InMemoryDatastore
+import eventsourcing.readmodels.TrainingClassView
 import kotlinx.coroutines.GlobalScope
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

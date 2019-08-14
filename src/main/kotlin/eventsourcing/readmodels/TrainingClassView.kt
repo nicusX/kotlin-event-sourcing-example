@@ -1,11 +1,11 @@
-package eventsourcing.readmodel
+package eventsourcing.readmodels
 
 import eventsourcing.domain.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-// TODO Implement Student aggregate and make TrainingClassView maintaining a list of StudentDTO within the Class
+// TODO Make TrainingClassView maintaining a list of StudentDTOs within the class
 
 data class TrainingClassDTO (
         val classId: ClassID,
@@ -18,7 +18,7 @@ data class TrainingClassDTO (
 
 
     companion object {
-        fun from(event: NewClassScheduled) : TrainingClassDTO =
+        fun from(event: NewClassScheduled) =
             TrainingClassDTO(
                     classId = event.classId,
                     title = event.title,
@@ -33,7 +33,7 @@ data class TrainingClassDTO (
 class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Handles<Event> {
 
     fun getById(classId: ClassID) : TrainingClassDTO =
-            datastore.getById(classId)
+            datastore.get(classId)
 
     fun list() : List<TrainingClassDTO> =
             datastore.list()
@@ -49,7 +49,7 @@ class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Ha
             }
             is StudentEnrolled -> {
                 val classId = event.classId
-                val old = datastore.getById(classId)
+                val old = datastore.get(classId)
                 val new = old.copy(
                         availableSpots = old.availableSpots - 1,
                         students = old.students + event.studentId,
@@ -60,7 +60,7 @@ class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Ha
             }
             is StudentUnenrolled -> {
                 val classId = event.classId
-                val old = datastore.getById(classId)
+                val old = datastore.get(classId)
                 val new = old.copy(
                         availableSpots = old.availableSpots + 1,
                         students = old.students - event.studentId,
@@ -69,7 +69,7 @@ class TrainingClassView(private val datastore: Datastore<TrainingClassDTO>) : Ha
                 log.debug("Unenrolling student. Updating {} -> {}", old, new)
                 datastore.save(classId, new)
             }
-            else -> log.debug("Event {} not handled", event)
+            else -> log.debug("{} not handled. Event ignored", event)
         }
     }
 

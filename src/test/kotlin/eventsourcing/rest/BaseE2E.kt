@@ -1,6 +1,6 @@
 package eventsourcing.rest
 
-import eventsourcing.readmodel.TrainingClassDTO
+import eventsourcing.readmodels.TrainingClassDTO
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.test.annotation.DirtiesContext
 import java.net.URI
 import java.time.LocalDate
 

@@ -1,10 +1,10 @@
-package eventsourcing.readmodel
+package eventsourcing.readmodels
 
 import java.lang.Exception
 
 interface Datastore<V> {
-    fun save(id: String, entity: V)
-    fun getById(id: String) : V
+    fun save(key: String, entity: V)
+    fun get(key: String) : V
     fun list() : List<V>
 }
 

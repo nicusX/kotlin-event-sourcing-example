@@ -1,4 +1,4 @@
-package eventsourcing.readmodel
+package eventsourcing.readmodels
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ internal class InMemoryDatastoreTest {
         val entity = Dummy(id, 0)
         sut.save(id, entity)
 
-        val retrieve = sut.getById(id)
+        val retrieve = sut.get(id)
         assertThat(retrieve).isEqualTo(entity)
     }
 
@@ -25,7 +25,7 @@ internal class InMemoryDatastoreTest {
         val new = Dummy(id, 1)
         sut.save(id, new)
 
-        val retrieve = sut.getById(id)
+        val retrieve = sut.get(id)
         assertThat(retrieve).isEqualTo(new)
     }
 

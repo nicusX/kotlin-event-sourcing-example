@@ -1,4 +1,4 @@
-package eventsourcing.readmodel
+package eventsourcing.readmodels
 
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.*
@@ -46,7 +46,7 @@ internal class TrainingClassViewTest {
         val event = StudentEnrolled(classId, "student001", 1L)
         sut.handle(event)
 
-        verify(datastore).getById(eq(classId))
+        verify(datastore).get(eq(classId))
         verify(datastore).save(eq(event.classId), check{
             assertThatDTO(it)
                     .hasClassId(event.classId)
@@ -75,7 +75,7 @@ internal class TrainingClassViewTest {
         val event = StudentUnenrolled(classId, studentId, "some reasons",3L)
         sut.handle(event)
 
-        verify(datastore).getById(eq(classId))
+        verify(datastore).get(eq(classId))
         verify(datastore).save(eq(event.classId), check{
             assertThatDTO(it)
                     .hasClassId(event.classId)
@@ -94,7 +94,7 @@ internal class TrainingClassViewTest {
 
     private fun given(dto: TrainingClassDTO): Pair<Datastore<TrainingClassDTO>, TrainingClassView> {
         val datastore = mock<Datastore<TrainingClassDTO>> {
-            on { getById(eq(dto.classId)) }.doReturn(dto)
+            on { get(eq(dto.classId)) }.doReturn(dto)
         }
         return Pair(datastore, TrainingClassView(datastore))
     }
