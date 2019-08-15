@@ -4,8 +4,8 @@ import eventsourcing.api.EnrollStudentRequest
 import eventsourcing.api.RegisterNewStudentRequest
 import eventsourcing.api.ScheduleNewClassRequest
 import eventsourcing.api.UnenrollStudentRequest
-import eventsourcing.readmodels.StudentDTO
-import eventsourcing.readmodels.TrainingClassDTO
+import eventsourcing.readmodels.studentdetails.StudentDetails
+import eventsourcing.readmodels.trainingclasses.TrainingClassDetails
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -60,23 +60,25 @@ internal abstract class BaseApiE2ETest(val template: TestRestTemplate) {
                     .returnsStatusCode(HttpStatus.ACCEPTED)
                     .extractLocation()
 
-    protected fun getClass_isOK_withVersion(classUri: URI, expectedVersion: Long): TrainingClassDTO =
+    protected fun getClass_isOK_withVersion(classUri: URI, expectedVersion: Long): TrainingClassDetails =
             // FIXME add a retry logic: it may fail if triggered immediately after a command, as read model update is asynchronous
-            template.assertThatApiGet<TrainingClassDTO>(classUri)
+            template.assertThatApiGet<TrainingClassDetails>(classUri)
                     .returnsStatusCode(HttpStatus.OK)
                     .returnsClassWithVersion(expectedVersion)
                     .extractBody()
 
-    protected fun getClass_isOk_withVersion_andWithStudents(classUri: URI, expectedVersion: Long, vararg students: String): TrainingClassDTO {
+    protected fun getClass_isOk_withVersion_andWithStudents(classUri: URI, expectedVersion: Long, vararg studentIds: String): TrainingClassDetails {
         val clazz = getClass_isOK_withVersion(classUri, expectedVersion)
-        for (student in students)
-            Assertions.assertThat(clazz.students).contains(student)
+        for (studentId in studentIds)
+            Assertions.assertThat(clazz.students)
+                    .extracting("studentId")
+                    .contains(studentId)
         return clazz
     }
 
-    protected fun getStudent_isOk_withVersion(studentUri: URI, expectedVersion: Long): StudentDTO =
+    protected fun getStudent_isOk_withVersion(studentUri: URI, expectedVersion: Long): StudentDetails =
             // FIXME add a retry logic
-            template.assertThatApiGet<StudentDTO>(studentUri)
+            template.assertThatApiGet<StudentDetails>(studentUri)
                     .returnsStatusCode(HttpStatus.OK)
                     .returnsStudentWithVersion(expectedVersion)
                     .extractBody()
@@ -136,12 +138,12 @@ internal abstract class BaseApiE2ETest(val template: TestRestTemplate) {
         }
 
         fun returnsClassWithVersion(expectedVersion: Long): ApiAssert<E> {
-            Assertions.assertThat((actual.body as TrainingClassDTO).version).isEqualTo(expectedVersion)
+            Assertions.assertThat((actual.body as TrainingClassDetails).version).isEqualTo(expectedVersion)
             return this
         }
 
         fun returnsStudentWithVersion(expectedVersion: Long): ApiAssert<E> {
-            Assertions.assertThat((actual.body as StudentDTO).version).isEqualTo(expectedVersion)
+            Assertions.assertThat((actual.body as StudentDetails).version).isEqualTo(expectedVersion)
             return this
         }
 

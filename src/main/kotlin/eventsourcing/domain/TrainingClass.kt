@@ -75,6 +75,8 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
 
     companion object  {
         fun scheduleNewClass (title: String, date: LocalDate, size: Int) : TrainingClass  {
+            // FIXME validate: size > 0 + test
+
             val classId = UUID.randomUUID().toString()
             val trainingClass = TrainingClass(classId)
             trainingClass.applyChangeAndQueueEvent(NewClassScheduled(classId, title, date, size))

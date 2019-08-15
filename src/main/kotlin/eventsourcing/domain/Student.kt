@@ -24,7 +24,7 @@ class Student(id: StudentID) : AggregateRoot(id) {
     }
 
     private fun apply(event: NewStudentRegistered) {
-        // TODO notify the Student
+        // TODO notify the Student (i.e. a non-idempotent side effect)
     }
 
     companion object {
@@ -39,6 +39,7 @@ class Student(id: StudentID) : AggregateRoot(id) {
             return student
         }
 
+        // FIXME use a Service querying a specialised Read Model containing emails only
         private fun StudentRepository.emailAlreadyInUse(email: EMail) : Boolean =
                 this.getByEmail(email).isPresent
 

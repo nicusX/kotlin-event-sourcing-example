@@ -1,8 +1,9 @@
 package eventsourcing.api
 
-import eventsourcing.readmodels.RecordNotFound
-import eventsourcing.readmodels.StudentDTO
-import eventsourcing.readmodels.StudentView
+import eventsourcing.readmodels.studentlist.Student
+import eventsourcing.readmodels.studentdetails.StudentDetails
+import eventsourcing.readmodels.studentdetails.StudentDetailsReadModel
+import eventsourcing.readmodels.studentlist.StudentListReadModel
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,19 +14,17 @@ import kotlin.reflect.jvm.javaMethod
 
 // TODO rewrite using Routing DSL and coRouter
 @RestController
-class StudentReadController(private val view: StudentView) {
+class StudentReadController(private val studentDetails: StudentDetailsReadModel, private val studentList: StudentListReadModel) {
 
-    // TODO Return a simplified DTO in the list
     @GetMapping("/students")
-    fun listTrainingClasses(): ResponseEntity<List<StudentDTO>> = ResponseEntity.ok(view.listStudents())
+    fun listTrainingClasses(): ResponseEntity<Iterable<Student>> =
+            ResponseEntity.ok(studentList.allStudents())
 
     @GetMapping("/students/{studentId}")
-    fun getStudent(@PathVariable studentId: String): ResponseEntity<StudentDTO> = try {
-        ResponseEntity.ok(view.getStudentById(studentId))
-    } catch (e: RecordNotFound) {
-        ResponseEntity.notFound().build()
-    }
-
+    fun getStudent(@PathVariable studentId: String): ResponseEntity<StudentDetails> =
+            studentDetails.getStudentById(studentId)
+                    .map{ ResponseEntity.ok(it) }
+                    .orElse(ResponseEntity.notFound().build())
 
     companion object {
         fun studentResourceLocation(studentId: String): URI =

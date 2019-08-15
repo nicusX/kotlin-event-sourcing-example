@@ -1,8 +1,8 @@
 package eventsourcing.api
 
-import eventsourcing.readmodels.RecordNotFound
-import eventsourcing.readmodels.TrainingClassDTO
-import eventsourcing.readmodels.TrainingClassView
+import eventsourcing.readmodels.trainingclasses.TrainingClass
+import eventsourcing.readmodels.trainingclasses.TrainingClassDetails
+import eventsourcing.readmodels.trainingclasses.TrainingClassReadModel
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,28 +13,24 @@ import kotlin.reflect.jvm.javaMethod
 
 // TODO rewrite using Routing DSL and coRouter
 @RestController
-class TrainingClassReadController(private val view: TrainingClassView) {
+class TrainingClassReadController(private val trainingClassReadModel: TrainingClassReadModel) {
 
-    // TODO Return a simplified DTO in the list
     @GetMapping("/classes")
-    fun listTrainingClasses() :  ResponseEntity<List<TrainingClassDTO>>
-            = ResponseEntity.ok(view.listClasses())
+    fun listTrainingClasses(): ResponseEntity<List<TrainingClass>> = ResponseEntity.ok(trainingClassReadModel.allClasses())
 
     @GetMapping("/classes/{classId}")
-    fun getTrainingClass(@PathVariable classId: String) : ResponseEntity<TrainingClassDTO>
-        =  try {
-            ResponseEntity.ok(view.getClassById(classId))
-        } catch (e: RecordNotFound) {
-            ResponseEntity.notFound().build()
-        }
+    fun getTrainingClass(@PathVariable classId: String): ResponseEntity<TrainingClassDetails> =
+            trainingClassReadModel.getTrainingClassDetailsById(classId)
+                    .map { ResponseEntity.ok(it) }
+                    .orElse(ResponseEntity.notFound().build())
 
 
     companion object {
-        fun classResourceLocation(classId: String) : URI =
-            MvcUriComponentsBuilder.fromMethod(
-                    TrainingClassReadController::class.java,
-                    TrainingClassReadController::getTrainingClass.javaMethod!!,
-                    classId)
-                    .build(classId)
+        fun classResourceLocation(classId: String): URI =
+                MvcUriComponentsBuilder.fromMethod(
+                        TrainingClassReadController::class.java,
+                        TrainingClassReadController::getTrainingClass.javaMethod!!,
+                        classId)
+                        .build(classId)
     }
 }

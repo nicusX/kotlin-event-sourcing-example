@@ -1,11 +1,13 @@
 package eventsourcing.domain
 
+import java.time.Instant
 import java.time.LocalDate
 
 abstract class Event(private val version: Long?) : Message() {
-    // TODO find a better way of managing Event.version
-    //      The problem is the version is assigned only then the Event is stored in the EventStore
-    fun version(): Long? = version
+    val eventTime =  Instant.now() // It would be better to inject a clock, but we have no logic to test around eventTime
+    // TODO add event timestamp
+    fun version(): Long? = version  // The version is assigned only then the Event is stored in the EventStore
+                                    // There are effectively two types of Events: before and after they are stored in the Event Store.
     abstract fun copyWithVersion(version: Long): Event
 }
 
