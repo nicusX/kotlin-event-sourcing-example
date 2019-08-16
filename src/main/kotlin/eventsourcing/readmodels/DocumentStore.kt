@@ -1,5 +1,6 @@
 package eventsourcing.readmodels
 
+import arrow.core.Option
 import java.lang.Exception
 import kotlin.Deprecated
 
@@ -9,11 +10,7 @@ import kotlin.Deprecated
  */
 interface DocumentStore<D> {
     fun save(key: String, document: D)
-    fun get(key: String) : D // FIXME change the interface to return an Optional
-
-    // FIXME remove me
-    @Deprecated("to be removed")
-    fun list() : List<D>
+    fun get(key: String) : Option<D>
 }
 
 /**
@@ -21,8 +18,5 @@ interface DocumentStore<D> {
  */
 interface SingleDocumentStore<D> {
     fun save(document: D)
-    fun get() : D?
+    fun get() : D
 }
-
-// FIXME get di
-class DocumentNotFound(key: String) : Exception("Document not found (key: $key)")

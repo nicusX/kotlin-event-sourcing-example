@@ -1,14 +1,10 @@
 package eventsourcing.readmodels.studentdetails
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
+import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.NewStudentRegistered
+import eventsourcing.readmodels.DocumentStore
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import com.nhaarman.mockitokotlin2.check
-import eventsourcing.readmodels.DocumentStore
 
 internal class StudentDetailsProjectionTest {
 

@@ -1,13 +1,35 @@
 package eventsourcing
 
+import arrow.core.Option
+import arrow.core.Some
+import arrow.core.getOrElse
 import eventsourcing.domain.AggregateID
 import eventsourcing.domain.AggregateRoot
 import eventsourcing.domain.Event
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
 
-internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAssert, Iterable<Event>>(actual, EventsAssert::class.java) {
+internal class  OptionAssert<T>(actual: Option<T>) : AbstractAssert<OptionAssert<T>, Option<T>>(actual, OptionAssert::class.java){
+    fun isEmpty(): OptionAssert<*> {
+        if( actual is Some ) failWithMessage("Expected None but was <%s>", actual.getOrElse { "None" } )
+        return this
+    }
 
+    override fun isEqualTo(expected: Any?): OptionAssert<T> = this.contains(expected)
+
+    fun contains(expected: Any?): OptionAssert<T> {
+        Assertions.assertThat( actual.getOrElse {
+            failWithMessage("Expected Some(<%s>) but was None", expected )
+        }).isEqualTo(expected)
+        return this
+    }
+
+    companion object {
+        fun <T> assertThatOption(actual: Option<T>) : OptionAssert<T> = OptionAssert(actual)
+    }
+}
+
+internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAssert, Iterable<Event>>(actual, EventsAssert::class.java) {
 
     fun contains(expectedSize: Int): EventsAssert {
         Assertions.assertThat(actual).hasSize(expectedSize)

@@ -1,5 +1,8 @@
 package eventsourcing.api
 
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
@@ -33,7 +36,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with the Student ID, then it returns the Student representation in JSON`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(Optional.of(aStudentDetails))
+        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(Some(aStudentDetails))
 
         mvc.perform(MockMvcRequestBuilders.get("/students/STUDENT001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk)
@@ -44,7 +47,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with a non-existing Student ID, then it returns 404`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn(Optional.empty())
+        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn(None)
 
         mvc.perform(MockMvcRequestBuilders.get("/classes/001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound)

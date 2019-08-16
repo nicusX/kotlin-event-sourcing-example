@@ -8,21 +8,24 @@ plugins {
 }
 
 group = "it.nicus"
-version = "0.0.2-SNAPSHOT"
+version = "0.0.3-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
+	mavenCentral()
 	jcenter()
 }
 
 dependencies {
 	val coroutineVersion = "1.3.0-RC"
+	val arrowVersion = "0.8.2"
 
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
+	implementation("io.arrow-kt:arrow-core:$arrowVersion")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "junit")

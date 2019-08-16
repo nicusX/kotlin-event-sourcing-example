@@ -16,7 +16,7 @@ typealias StudentList = Iterable<Student>
 
 
 class StudentListReadModel(private val studentListStore: SingleDocumentStore<StudentList>) {
-    fun allStudents() : StudentList = studentListStore.get() ?: emptyList()
+    fun allStudents() : StudentList = studentListStore.get()
 }
 
 class StudentListProjection(private val studentListStore : SingleDocumentStore<StudentList>) : Handles<Event> {
@@ -25,7 +25,7 @@ class StudentListProjection(private val studentListStore : SingleDocumentStore<S
             is NewStudentRegistered -> {
                 val new = event.toStudent()
                 log.debug("Add new Student {} to the read-model and sort the list alphabetically by fullName", new)
-                val newSortedList = ((studentListStore.get() ?: emptyList()) + new).sortedBy { it.fullName }
+                val newSortedList = (studentListStore.get() + new).sortedBy { it.fullName }
                 studentListStore.save(newSortedList)
             }
         }
