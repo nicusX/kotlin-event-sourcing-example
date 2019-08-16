@@ -1,5 +1,6 @@
 package eventsourcing.end2end
 
+import eventsourcing.Retry.retryOnAssertionFailure
 import eventsourcing.api.EnrollStudentRequest
 import eventsourcing.api.RegisterNewStudentRequest
 import eventsourcing.api.ScheduleNewClassRequest
@@ -21,10 +22,18 @@ import java.time.LocalDate
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 internal abstract class BaseE2EJourneyTest(val template: TestRestTemplate) {
 
-    fun forcedDelay() = Thread.sleep(100L) // FIXME remove this artificial delay and replace with a retry
+    // TODO Configure the application to apply simulated latency in the message bus
 
-    protected fun listClasses_isOk(): Int {
-        forcedDelay()
+    // Because read models are eventually consistent, all GET operations retries if they initially fail
+    // You would not probably notice any error when running on a local machine, as the latency is negligible. But if you
+    // amplify the latency (set a `simulateLatency` in AsyncInMemoryBus, you will start observing delay, as in a real
+    // system, and these E2E tests will start randomly failing, getting a 404 instead of 200 on reads to read models
+
+    // Retries on assertion errors
+    val maxRetries = 30
+    val retryDelay = 100L
+
+    protected fun listClasses_isOk(): Int = retryOnAssertionFailure(maxRetries, retryDelay) {
         return template.assertThatApiGet<List<Any>>("/classes")
                 .returnsStatusCode(HttpStatus.OK)
                 .extractBody().size
@@ -37,24 +46,23 @@ internal abstract class BaseE2EJourneyTest(val template: TestRestTemplate) {
         return size
     }
 
-    protected fun listStudents_isOk(): Int {
-        forcedDelay()
+    protected fun listStudents_isOk(): Int = retryOnAssertionFailure(maxRetries, retryDelay) {
         return template.assertThatApiGet<List<Any>>("/students")
                 .returnsStatusCode(HttpStatus.OK)
                 .extractBody().size
     }
 
-    protected fun listStudents_isOk_withNofStudents(expectedNofStudents: Int) : Int {
+    protected fun listStudents_isOk_withNofStudents(expectedNofStudents: Int): Int {
         val size = listStudents_isOk()
         assertThat(size).isEqualTo(expectedNofStudents)
         return size
     }
 
-    protected fun registerStudent_withEmailAndFullName_isAccepted(email: String, fullName: String) : URI =
+    protected fun registerStudent_withEmailAndFullName_isAccepted(email: String, fullName: String): URI =
             template.assertThatApiPost<Any, RegisterNewStudentRequest>("/students/register",
                     RegisterNewStudentRequest(
                             email = email,
-                            fullName = fullName ))
+                            fullName = fullName))
                     .returnsStatusCode(HttpStatus.ACCEPTED)
                     .extractLocation()
 
@@ -67,9 +75,7 @@ internal abstract class BaseE2EJourneyTest(val template: TestRestTemplate) {
                     .returnsStatusCode(HttpStatus.ACCEPTED)
                     .extractLocation()
 
-    protected fun getClass_isOK_withVersion(classUri: URI, expectedVersion: Long): TrainingClassDetails {
-        forcedDelay()
-        // FIXME add a retry logic: it may fail if triggered immediately after a command, as read model update is asynchronous
+    protected fun getClass_isOK_withVersion(classUri: URI, expectedVersion: Long): TrainingClassDetails = retryOnAssertionFailure(maxRetries, retryDelay) {
         return template.assertThatApiGet<TrainingClassDetails>(classUri)
                 .returnsStatusCode(HttpStatus.OK)
                 .returnsClassWithVersion(expectedVersion)
@@ -85,9 +91,7 @@ internal abstract class BaseE2EJourneyTest(val template: TestRestTemplate) {
         return clazz
     }
 
-    protected fun getStudent_isOk_withVersion(studentUri: URI, expectedVersion: Long): StudentDetails {
-        forcedDelay()
-        // FIXME add a retry logic
+    protected fun getStudent_isOk_withVersion(studentUri: URI, expectedVersion: Long): StudentDetails = retryOnAssertionFailure(maxRetries, retryDelay) {
         return template.assertThatApiGet<StudentDetails>(studentUri)
                 .returnsStatusCode(HttpStatus.OK)
                 .returnsStudentWithVersion(expectedVersion)
