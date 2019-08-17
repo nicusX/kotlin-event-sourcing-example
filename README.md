@@ -1,8 +1,8 @@
 # Simple Event-Sourcing/CQRS example, in Kotlin
 
-[![Build Status](https://travis-ci.org/nicusX/kotlin-event-sourcing-example.svg?branch=master)](https://travis-ci.org/nicusX/kotlin-event-sourcing-minimal)
+[![Build Status](https://travis-ci.org/nicusX/kotlin-event-sourcing-example.svg?branch=master)](https://travis-ci.org/nicusX/kotlin-event-sourcing-example)
 
-This project is for demonstration purposes and a learning exercise.
+This project is for demonstration purposes.
 
 It implements a simple Event-Sourcing system, based on [Greg Young's SimpleCQRS](https://github.com/gregoryyoung/m-r).
 
