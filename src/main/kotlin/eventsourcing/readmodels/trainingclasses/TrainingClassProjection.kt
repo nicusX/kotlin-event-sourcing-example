@@ -2,11 +2,12 @@ package eventsourcing.readmodels.trainingclasses
 
 import eventsourcing.domain.*
 import eventsourcing.readmodels.DocumentStore
+import eventsourcing.readmodels.InconsistentReadModelException
 import eventsourcing.readmodels.SingleDocumentStore
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-// TODO Add the ability to rebuild the Read Model, re-streaming all events
+// TODO Add the ability to rebuild the Read Model, re-streaming all events. Possibly on InconsistentReadModelException
 
 class TrainingClassProjection (
         private val trainingClassDetailsStore: DocumentStore<TrainingClassDetails>,
@@ -46,7 +47,8 @@ class TrainingClassProjection (
         }
     }
 
-    private fun lookupStudentContacts(studentId: String) : StudentContacts = studentsContactsStore.get(studentId)
+    private fun lookupStudentContacts(studentId: String) : StudentContacts =
+            studentsContactsStore.get(studentId) ?: throw InconsistentReadModelException
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(TrainingClassProjection::class.java)
@@ -83,25 +85,26 @@ private fun DocumentStore<TrainingClassDetails>.addNewClass(newClass: TrainingCl
 
 private fun SingleDocumentStore<TrainingClassList>.addNewClassAndSort(newClass: TrainingClass) {
     TrainingClassProjection.log.trace("Add Class to TrainingClassList view: {}", newClass)
-    this.save(((this.get() ?: emptyList()) + newClass).sortedBy { it.date })
+    this.save(((this.get()) + newClass).sortedBy { it.date })
 }
 
 private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: String, student: EnrolledStudent, newVersion : Long) {
     val old = this.get(classId) // We assume events are always processed in order, so the class exists
-    val new = old.copy(
+    val new = old?.copy(
             availableSpots = old.availableSpots - 1,
             students = old.students + student,
-            version = newVersion)
+            version = newVersion) ?: throw InconsistentReadModelException
     TrainingClassProjection.log.trace("Adding Student to Class in TrainingClassDetails view. Updating {} -> {}", old, new)
     this.save(classId, new)
 }
 
 private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old = this.get(classId)
-    val new = old.copy(
-            availableSpots = old.availableSpots + 1,
-            students = old.students - student,
-            version = newVersion)
+    val old : TrainingClassDetails? = this.get(classId)
+    val new = old?.copy(
+                availableSpots = old.availableSpots + 1,
+                students = old.students - student,
+                version = newVersion) ?: throw InconsistentReadModelException
+
     TrainingClassProjection.log.trace("Removing Student from Class in TrainingClassDetails view. Updating {} -> {}", old, new)
     this.save(classId, new)
 }

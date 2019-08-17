@@ -22,9 +22,7 @@ class StudentReadController(private val studentDetails: StudentDetailsReadModel,
 
     @GetMapping("/students/{studentId}")
     fun getStudent(@PathVariable studentId: String): ResponseEntity<StudentDetails> =
-            studentDetails.getStudentById(studentId)
-                    .map{ ResponseEntity.ok(it) }
-                    .orElse(ResponseEntity.notFound().build())
+            studentDetails.getStudentById(studentId)?.toResponse() ?: ResponseEntity.notFound().build()
 
     companion object {
         fun studentResourceLocation(studentId: String): URI =
@@ -35,3 +33,5 @@ class StudentReadController(private val studentDetails: StudentDetailsReadModel,
                         .build(studentId)
     }
 }
+
+private fun StudentDetails.toResponse() : ResponseEntity<StudentDetails> = ResponseEntity.ok(this)

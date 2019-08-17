@@ -27,13 +27,13 @@ class KotlinBootApplication {
     private val studentDetailsReadModelFacade = StudentDetailsReadModel(studentDetailsDatastore)
 
     // Student List Read Model
-    private val studentListDatastore = InMemorySingleDocumentStore<StudentList>()
+    private val studentListDatastore = InMemorySingleDocumentStore<StudentList>(emptyList())
     private val studentListProjection = StudentListProjection(studentListDatastore)
     private val studentListReadModelFacade = StudentListReadModel(studentListDatastore)
 
     // Training Class Read Model
     private val trainingClassDetailsStore = InMemoryDocumentStore<TrainingClassDetails>()
-    private val trainingClassListStore = InMemorySingleDocumentStore<TrainingClassList>()
+    private val trainingClassListStore = InMemorySingleDocumentStore<TrainingClassList>(emptyList())
     private val studentsContactsStore = InMemoryDocumentStore<StudentContacts>()
     private val trainingClassProjection = TrainingClassProjection(trainingClassDetailsStore, trainingClassListStore, studentsContactsStore)
     private val trainingClassReadModel = TrainingClassReadModel(trainingClassDetailsStore, trainingClassListStore)

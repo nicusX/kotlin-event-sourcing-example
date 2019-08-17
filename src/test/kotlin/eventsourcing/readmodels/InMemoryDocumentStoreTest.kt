@@ -31,12 +31,11 @@ internal class InMemoryDocumentStoreTest {
     }
 
     @Test
-    fun `given a store, when I retrieve a document not in the store, then I get a DocumentNotFound exception`(){
+    fun `given a store, when I retrieve a document not in the store, then I get null`(){
         val sut = givenAnEmptyDocumentStore()
 
-        assertThrows<DocumentNotFound> {
-            sut.get("-non-existing-key-")
-        }
+        val res = sut.get("-non-existing-key-")
+        assertThat(res).isNull()
     }
 }
 

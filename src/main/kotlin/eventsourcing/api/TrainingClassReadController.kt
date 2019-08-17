@@ -20,9 +20,7 @@ class TrainingClassReadController(private val trainingClassReadModel: TrainingCl
 
     @GetMapping("/classes/{classId}")
     fun getTrainingClass(@PathVariable classId: String): ResponseEntity<TrainingClassDetails> =
-            trainingClassReadModel.getTrainingClassDetailsById(classId)
-                    .map { ResponseEntity.ok(it) }
-                    .orElse(ResponseEntity.notFound().build())
+            trainingClassReadModel.getTrainingClassDetailsById(classId)?.toResponse() ?: ResponseEntity.notFound().build()
 
 
     companion object {
@@ -34,3 +32,5 @@ class TrainingClassReadController(private val trainingClassReadModel: TrainingCl
                         .build(classId)
     }
 }
+
+private fun TrainingClassDetails.toResponse(): ResponseEntity<TrainingClassDetails> =  ResponseEntity.ok(this)

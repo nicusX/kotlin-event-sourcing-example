@@ -33,7 +33,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with the Student ID, then it returns the Student representation in JSON`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(Optional.of(aStudentDetails))
+        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(aStudentDetails)
 
         mvc.perform(MockMvcRequestBuilders.get("/students/STUDENT001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk)
@@ -44,7 +44,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with a non-existing Student ID, then it returns 404`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn(Optional.empty())
+        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn( null )
 
         mvc.perform(MockMvcRequestBuilders.get("/classes/001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound)

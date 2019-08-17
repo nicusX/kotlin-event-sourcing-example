@@ -1,10 +1,8 @@
 package eventsourcing.readmodels.trainingclasses
 
-import eventsourcing.readmodels.DocumentNotFound
 import eventsourcing.readmodels.DocumentStore
 import eventsourcing.readmodels.SingleDocumentStore
 import java.time.LocalDate
-import java.util.*
 
 data class TrainingClassDetails (
         val classId: String,
@@ -44,11 +42,10 @@ class TrainingClassReadModel (
         private val trainingClassListStore: SingleDocumentStore<TrainingClassList>) {
 
     fun allClasses() : TrainingClassList =
-            trainingClassListStore.get() ?: emptyList()
+            trainingClassListStore.get()
 
-    fun getTrainingClassDetailsById(classId: String) : Optional<TrainingClassDetails> =
-            try { Optional.of(trainingClassDetailsStore.get(classId)) }
-            catch ( notFound: DocumentNotFound) { Optional.empty()}
+    fun getTrainingClassDetailsById(classId: String) : TrainingClassDetails? =
+            trainingClassDetailsStore.get(classId)
 
     // Note the Student Contacts view is not exposed. It is only used internally
 }

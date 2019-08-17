@@ -4,14 +4,13 @@ import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.util.*
 
 internal class StudentTest {
 
     @Test
     fun `given a new student registration request, when the email is not in use, then it successfully create a new Student and a NewStudentRegistered event is queued`() {
         val repository  = mock<StudentRepository> {
-            on { getByEmail( any()) }.doReturn( Optional.empty() )
+            on { getByEmail( any()) }.doReturn( null )
         }
         val sut = Student.Companion
 
@@ -27,7 +26,7 @@ internal class StudentTest {
     @Test
     fun `given a new student registration request, when email is already in use, then it throws DuplicateEmailException`() {
         val repository  = mock<StudentRepository> {
-            on { getByEmail( any()) }.doReturn( Optional.of( Student("an-id") ) )
+            on { getByEmail( any()) }.doReturn( Student("an-id") )
         }
 
         val sut = Student.Companion

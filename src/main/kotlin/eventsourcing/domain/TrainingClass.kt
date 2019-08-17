@@ -75,7 +75,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
 
     companion object  {
         fun scheduleNewClass (title: String, date: LocalDate, size: Int) : TrainingClass  {
-            // FIXME validate: size > 0 + test
+            if ( size <= 0) throw InvalidClassSizeException()
 
             val classId = UUID.randomUUID().toString()
             val trainingClass = TrainingClass(classId)
@@ -96,3 +96,6 @@ class StudentNotEnrolledException(studentId: StudentID, classId: ClassID)
 
 class NoAvailableSpotsException(classId: ClassID)
     : Exception("Class $classId has no available spots")
+
+class InvalidClassSizeException()
+    : Exception("Class must have size > 0")
