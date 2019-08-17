@@ -1,9 +1,9 @@
 package eventsourcing.readmodels.studentdetails
 
-import arrow.core.Option
 import eventsourcing.domain.Event
 import eventsourcing.domain.Handles
 import eventsourcing.domain.NewStudentRegistered
+import eventsourcing.readmodels.DocumentNotFound
 import eventsourcing.readmodels.DocumentStore
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -42,6 +42,7 @@ class StudentDetailsProjection(private val studentDetailsStore: DocumentStore<St
  * External, read-only facade for the read model
  */
 class StudentDetailsReadModel(private val studentDetailsStore: DocumentStore<StudentDetails>) {
-    fun getStudentById(studentId: String) : Option<StudentDetails> =
-            studentDetailsStore.get(studentId)
+    fun getStudentById(studentId: String) : Optional<StudentDetails> =
+            try { Optional.of(studentDetailsStore.get(studentId)) }
+            catch ( notFound: DocumentNotFound) { Optional.empty()}
 }

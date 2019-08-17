@@ -1,7 +1,5 @@
 package eventsourcing.api
 
-import arrow.core.None
-import arrow.core.Some
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
@@ -38,7 +36,7 @@ internal class TrainingClassReadControllerIT {
 
     @Test
     fun `when I hit the GET Class endpoint with the class ID, then it returns the class representation in JSON`() {
-        whenever(trainingClassReadModel.getTrainingClassDetailsById(eq("001"))).thenReturn(Some(aClassDetails))
+        whenever(trainingClassReadModel.getTrainingClassDetailsById(eq("001"))).thenReturn(Optional.of(aClassDetails))
 
         mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk)
@@ -49,7 +47,7 @@ internal class TrainingClassReadControllerIT {
 
     @Test
     fun `when I hit the GET Class endpoint with a non-existing Class ID, then it returns 404`() {
-        whenever(trainingClassReadModel.getTrainingClassDetailsById(eq("001"))).thenReturn(None)
+        whenever(trainingClassReadModel.getTrainingClassDetailsById(eq("001"))).thenReturn(Optional.empty())
 
 
         mvc.perform(get("/classes/001").accept(MediaType.APPLICATION_JSON))

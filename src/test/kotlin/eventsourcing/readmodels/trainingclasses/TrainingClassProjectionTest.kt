@@ -1,6 +1,5 @@
 package eventsourcing.readmodels.trainingclasses
 
-import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.NewClassScheduled
 import eventsourcing.domain.NewStudentRegistered
@@ -74,8 +73,8 @@ internal class TrainingClassProjectionTest {
         val studentContacts = StudentContacts(studentId, "test@ema.il")
         val enrolledStudent = EnrolledStudent(studentId, "email", studentContacts.email)
 
-        whenever(trainingClassDetailsStore.get(any())).thenReturn(Some(oldTrainingClassDetails))
-        whenever(studentsContactsStore.get(any())).thenReturn(Some(studentContacts))
+        whenever(trainingClassDetailsStore.get(any())).thenReturn(oldTrainingClassDetails)
+        whenever(studentsContactsStore.get(any())).thenReturn(studentContacts)
 
         val event = StudentEnrolled(classId, studentId, 0L)
         sut.handle(event)
@@ -113,8 +112,8 @@ internal class TrainingClassProjectionTest {
                 students = listOf(enrolledStudent),
                 version = 1L)
 
-        whenever(trainingClassDetailsStore.get(any())).thenReturn(Some(oldTrainingClassDetails))
-        whenever(studentsContactsStore.get(any())).thenReturn(Some(studentContacts))
+        whenever(trainingClassDetailsStore.get(any())).thenReturn(oldTrainingClassDetails)
+        whenever(studentsContactsStore.get(any())).thenReturn(studentContacts)
 
         val event = StudentUnenrolled(classId, studentId, "Some good reasons", 2L)
         sut.handle(event)

@@ -1,9 +1,7 @@
 package eventsourcing.readmodels.trainingclasses
 
-import arrow.core.None
-import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
-import eventsourcing.OptionAssert.Companion.assertThatOption
+import eventsourcing.readmodels.DocumentNotFound
 import eventsourcing.readmodels.DocumentStore
 import eventsourcing.readmodels.SingleDocumentStore
 import org.assertj.core.api.Assertions.assertThat
@@ -25,11 +23,11 @@ internal class TrainingClassReadModelTest {
     fun `given a Training Class read model, when I get an existing Training Class Details by Id, then it returns the class`() {
         val sut = givenTrainingClassReadModel()
 
-        whenever(trainingClassDetailsStore.get(any())).thenReturn(Some(aTrainingClassDetails))
+        whenever(trainingClassDetailsStore.get(any())).thenReturn(aTrainingClassDetails)
 
         val result = sut.getTrainingClassDetailsById(aTrainingClassDetails.classId)
 
-        assertThatOption(result).contains(aTrainingClassDetails)
+        assertThat(result).contains(aTrainingClassDetails)
 
         verify(trainingClassDetailsStore).get(eq(aTrainingClassDetails.classId))
 
@@ -41,11 +39,11 @@ internal class TrainingClassReadModelTest {
     fun `given a Training Class read model, when I get a non existing Training Class Details, then it returns an empty result`() {
         val sut = givenTrainingClassReadModel()
 
-        whenever(trainingClassDetailsStore.get(any())).thenReturn(None)
+        whenever(trainingClassDetailsStore.get(any())).thenAnswer { throw DocumentNotFound("") }
 
         val result = sut.getTrainingClassDetailsById("NON-EXISTING-CLASS")
 
-        assertThatOption(result).isEmpty()
+        assertThat(result).isEmpty
 
         verify(trainingClassDetailsStore).get(eq("NON-EXISTING-CLASS"))
 
