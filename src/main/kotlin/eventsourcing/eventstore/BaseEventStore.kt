@@ -26,13 +26,13 @@ abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>
         return stream(key).map{ it.map { it.event } }
     }
 
-    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Option<Long>) : Either<Problem, Iterable<Event>> {
+    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Option<Long>) : Either<EventStoreProblem, Iterable<Event>> {
         val streamKey = StreamKey(aggregateType, aggregateId)
         log.debug("Saving new events for {}. Expected version: {}", streamKey, expectedVersion)
 
         return if ( stream(streamKey).concurrentChangeDetected(expectedVersion) ) {
             log.debug("Concurrent change detected")
-            Left(Problem.ConcurrentChangeDetected)
+            Left(EventStoreProblem.ConcurrentChangeDetected)
         } else {
             log.debug("Appending and publishing {} events", events.count())
             Right(appendAndPublish(streamKey, events, expectedVersion))

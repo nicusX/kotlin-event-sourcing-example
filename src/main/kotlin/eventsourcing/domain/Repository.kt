@@ -1,13 +1,10 @@
 package eventsourcing.domain
 
-import java.lang.Exception
+import arrow.core.None
+import arrow.core.Option
 
 interface Repository<A: AggregateRoot> {
-    fun getById(id: AggregateID): A // FIXME change to return Option<A>
-    fun save(aggregate: A, expectedVersion: Long? = null) // FIXME change expectedVersion: Option<Long>
+    fun getById(id: AggregateID): Option<A>
+    fun save(aggregate: A, expectedVersion: Option<Long> = None)
     fun new(id: AggregateID) : A
 }
-
-// FIXME remove this exception
-class AggregateNotFoundException(aggregateType: AggregateType, aggregateID: AggregateID)
-    : Exception("Aggregate not found. ${aggregateType.toString()}:${aggregateID.toString()}")

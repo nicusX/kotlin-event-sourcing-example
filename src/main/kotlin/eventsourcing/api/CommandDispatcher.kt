@@ -41,6 +41,8 @@ class CommandDispatcher(private val classRepo: TrainingClassRepository, private 
 
 interface CommandSuccess
 
-
-
 class UnhandledCommandException(command: Command) : Exception("Command ${command::class.simpleName} is not handled")
+
+// FIXME remove this exception
+@Deprecated("To be removed")
+class AggregateNotFoundException() : Exception()

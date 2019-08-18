@@ -6,7 +6,6 @@ import eventsourcing.EventsAssert.Companion.assertThatEvents
 import eventsourcing.domain.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 
 val AGGREGATE_TYPE : AggregateType = TrainingClass.TYPE
@@ -53,7 +52,7 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 2L
-        val savedEvents: Either<Problem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+        val savedEvents: Either<EventStoreProblem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
 
         assertThat(savedEvents.isRight()).isTrue()
     }
@@ -74,10 +73,10 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 42L
-        val savedEvents: Either<Problem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+        val savedEvents: Either<EventStoreProblem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
 
         assertThat(savedEvents.isLeft()).isTrue()
-        assertThat(savedEvents.swap().orNull()).isEqualTo(Problem.ConcurrentChangeDetected)
+        assertThat(savedEvents.swap().orNull()).isEqualTo(EventStoreProblem.ConcurrentChangeDetected)
     }
 
 

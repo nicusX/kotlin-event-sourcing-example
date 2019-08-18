@@ -1,7 +1,8 @@
 package eventsourcing.domain
 
+import arrow.core.None
 import com.nhaarman.mockitokotlin2.check
-import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
@@ -20,10 +21,10 @@ class StudentCommandHandlersTest {
 
         assertThat(result.studentID).isNotBlank()
 
-        verify(repository).save(check {
+        verify(repository).save( check {
             assertThat(it).isInstanceOf( Student::class.java )
             assertThatAggregateUncommitedChanges(it).onlyContainsAnEventOfType( NewStudentRegistered::class.java )
-        }, isNull())
+        },  eq(None))
 
     }
 }

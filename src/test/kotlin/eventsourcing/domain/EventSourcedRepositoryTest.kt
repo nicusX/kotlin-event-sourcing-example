@@ -3,6 +3,7 @@ package eventsourcing.domain
 import arrow.core.None
 import arrow.core.Right
 import arrow.core.Some
+import arrow.core.getOrElse
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.TrainingClass.Companion.scheduleNewClass
 import org.assertj.core.api.Assertions.assertThat
@@ -42,23 +43,23 @@ internal class EventSourcedRepositoryTest {
 
         val clazz = sut.getById(classId)
 
-        assertThat(clazz).isNotNull
-        assertThat(clazz.getUncommittedChanges()).isEmpty()
+        assertThat(clazz.isDefined()).isTrue()
+        assertThat(clazz.orNull()?.getUncommittedChanges()).isEmpty()
         verify(eventStore).getEventsForAggregate(eq(TrainingClass.TYPE), eq(classId))
         verifyNoMoreInteractions(eventStore)
     }
 
     @Test
-    fun `given an event store, when I get a non-existing aggregate by Id, then an AggregateNotFoundException is thrown`(){
+    fun `given an event store, when I get a non-existing aggregate by Id, then I get an empty result`(){
         val classId = "class-id"
         val eventStore = mock<EventStore> {
             on { getEventsForAggregate(TrainingClass.TYPE, classId) }.doReturn( None )
         }
         val sut = eventSourcedRepo(eventStore)
 
-        assertThrows<AggregateNotFoundException> {
-            sut.getById(classId)
-        }
+        val clazz = sut.getById(classId)
+
+        assertThat(clazz.isEmpty()).isTrue()
     }
 
 }

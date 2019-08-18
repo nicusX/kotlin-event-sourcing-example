@@ -80,7 +80,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails because the Class does not exist, then it returns 404 NOT FOUND`(){
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenAnswer{ throw AggregateNotFoundException(TrainingClass.TYPE, aClassId) }
+                .thenAnswer{ throw AggregateNotFoundException() }
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +153,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Unenroll Student endpoint, when command handling fails because the Class does not exist, then it returns 404 NOT FOUND`(){
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenAnswer{ throw AggregateNotFoundException(TrainingClass.TYPE, aClassId) }
+                .thenAnswer{ throw AggregateNotFoundException() }
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -9,12 +9,12 @@ interface EventStore {
             aggregateType: AggregateType,
             aggregateId: AggregateID,
             events: Iterable<Event>,
-            expectedVersion: Option<Long> = None) : Either<Problem, Iterable<Event>>
+            expectedVersion: Option<Long> = None) : Either<EventStoreProblem, Iterable<Event>>
 
     fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Option<Iterable<Event>>
 }
 
 
-sealed class Problem {
-    object ConcurrentChangeDetected : Problem()
+sealed class EventStoreProblem : Problem {
+    object ConcurrentChangeDetected : EventStoreProblem()
 }

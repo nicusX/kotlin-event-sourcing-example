@@ -1,5 +1,7 @@
 package eventsourcing.domain
 
+import arrow.core.None
+import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
 import org.assertj.core.api.Assertions.assertThat
@@ -21,7 +23,7 @@ internal class TrainingClassCommandHandlersTest {
         verify(repository).save(check {
             assertThat(it).isInstanceOf(TrainingClass::class.java)
             assertThatAggregateUncommitedChanges(it).onlyContainsAnEventOfType(NewClassScheduled::class.java)
-        }, isNull())
+        }, eq(None))
     }
 
 
@@ -30,7 +32,7 @@ internal class TrainingClassCommandHandlersTest {
         val classId: ClassID = "a-class"
         val clazz = mock<TrainingClass>()
         val repository = mock<TrainingClassRepository> {
-            on { getById(any())}.doReturn( clazz )
+            on { getById(any())}.doReturn( Some(clazz) )
         }
         val fut = handleEnrollStudent(repository)
 
@@ -41,7 +43,7 @@ internal class TrainingClassCommandHandlersTest {
 
         verify(clazz).enrollStudent(eq("a-student"))
         verify(repository).getById(eq(classId))
-        verify(repository).save( any<TrainingClass>(), eq(43L) )
+        verify(repository).save( any<TrainingClass>(), eq(Some(43L)) )
     }
 
     @Test
@@ -49,7 +51,7 @@ internal class TrainingClassCommandHandlersTest {
         val classId: ClassID = "a-class"
         val clazz = mock<TrainingClass>()
         val repository = mock<TrainingClassRepository> {
-            on { getById(any())}.doReturn( clazz )
+            on { getById(any())}.doReturn( Some(clazz) )
         }
         val fut = handleUnenrollStudent(repository)
 
@@ -60,6 +62,6 @@ internal class TrainingClassCommandHandlersTest {
 
         verify(clazz).unenrollStudent(eq("a-student"), eq("some reasons"))
         verify(repository).getById(eq(classId))
-        verify(repository).save( any<TrainingClass>(), eq(43L) )
+        verify(repository).save( any<TrainingClass>(), eq(Some(43L)) )
     }
 }
