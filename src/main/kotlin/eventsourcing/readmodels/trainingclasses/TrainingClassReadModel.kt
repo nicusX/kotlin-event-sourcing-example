@@ -1,5 +1,6 @@
 package eventsourcing.readmodels.trainingclasses
 
+import arrow.core.Option
 import eventsourcing.readmodels.DocumentStore
 import eventsourcing.readmodels.SingleDocumentStore
 import java.time.LocalDate
@@ -44,8 +45,8 @@ class TrainingClassReadModel (
     fun allClasses() : TrainingClassList =
             trainingClassListStore.get()
 
-    fun getTrainingClassDetailsById(classId: String) : TrainingClassDetails? =
-            trainingClassDetailsStore.get(classId).orNull() // FIXME use Option
+    fun getTrainingClassDetailsById(classId: String) : Option<TrainingClassDetails> =
+            trainingClassDetailsStore.get(classId)
 
     // Note the Student Contacts view is not exposed. It is only used internally
 }

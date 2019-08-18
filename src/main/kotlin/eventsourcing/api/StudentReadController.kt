@@ -1,5 +1,6 @@
 package eventsourcing.api
 
+import arrow.core.getOrElse
 import eventsourcing.readmodels.studentlist.Student
 import eventsourcing.readmodels.studentdetails.StudentDetails
 import eventsourcing.readmodels.studentdetails.StudentDetailsReadModel
@@ -22,7 +23,9 @@ class StudentReadController(private val studentDetails: StudentDetailsReadModel,
 
     @GetMapping("/students/{studentId}")
     fun getStudent(@PathVariable studentId: String): ResponseEntity<StudentDetails> =
-            studentDetails.getStudentById(studentId)?.toResponse() ?: ResponseEntity.notFound().build()
+            studentDetails.getStudentById(studentId)
+                    .map { it.toResponse() }
+                    .getOrElse { notFoundResponse() }
 
     companion object {
         fun studentResourceLocation(studentId: String): URI =

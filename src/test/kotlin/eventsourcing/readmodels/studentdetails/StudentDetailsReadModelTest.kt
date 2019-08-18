@@ -1,6 +1,7 @@
 package eventsourcing.readmodels.studentdetails
 
 import arrow.core.None
+import arrow.core.Option
 import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.readmodels.DocumentStore
@@ -15,8 +16,8 @@ internal class StudentDetailsReadModelTest {
         val aStudent = StudentDetails("STUDENT001", "test@ema.il", "Full Name", 2L)
         whenever(store.get(any())).thenReturn( Some(aStudent) )
 
-        val result = sut.getStudentById("STUDENT001")
-        assertThat(result).isEqualTo(aStudent)
+        val result : Option<StudentDetails> = sut.getStudentById("STUDENT001")
+        assertThat(result.orNull()).isEqualTo(aStudent)
 
         verify(store).get(eq("STUDENT001"))
         verifyNoMoreInteractions(store)
@@ -27,8 +28,8 @@ internal class StudentDetailsReadModelTest {
         val (sut, store) = givenReadModelAndStore()
         whenever(store.get(any())).thenReturn( None )
 
-        val result = sut.getStudentById("NOT-EXISTS")
-        assertThat(result).isNull()
+        val result : Option<StudentDetails> = sut.getStudentById("NOT-EXISTS")
+        assertThat(result).isEqualTo(None)
     }
 
 

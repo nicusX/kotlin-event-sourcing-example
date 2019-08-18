@@ -1,11 +1,13 @@
 package eventsourcing.api
 
+import arrow.core.None
+import arrow.core.Some
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import eventsourcing.readmodels.studentlist.Student
 import eventsourcing.readmodels.studentdetails.StudentDetails
 import eventsourcing.readmodels.studentdetails.StudentDetailsReadModel
+import eventsourcing.readmodels.studentlist.Student
 import eventsourcing.readmodels.studentlist.StudentListReadModel
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -16,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import java.util.*
 
 @ExtendWith(SpringExtension::class)
 internal class StudentReadControllerIT {
@@ -33,7 +34,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with the Student ID, then it returns the Student representation in JSON`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(aStudentDetails)
+        whenever(studentDetailsReadModel.getStudentById(eq("STUDENT001"))).thenReturn(Some(aStudentDetails))
 
         mvc.perform(MockMvcRequestBuilders.get("/students/STUDENT001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk)
@@ -44,7 +45,7 @@ internal class StudentReadControllerIT {
 
     @Test
     fun `when I hit the GET Student endpoint with a non-existing Student ID, then it returns 404`() {
-        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn( null )
+        whenever(studentDetailsReadModel.getStudentById(eq("DO-NOT-EXISTS"))).thenReturn( None )
 
         mvc.perform(MockMvcRequestBuilders.get("/classes/001").accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound)

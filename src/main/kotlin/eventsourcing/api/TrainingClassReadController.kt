@@ -1,5 +1,6 @@
 package eventsourcing.api
 
+import arrow.core.getOrElse
 import eventsourcing.readmodels.trainingclasses.TrainingClass
 import eventsourcing.readmodels.trainingclasses.TrainingClassDetails
 import eventsourcing.readmodels.trainingclasses.TrainingClassReadModel
@@ -20,8 +21,9 @@ class TrainingClassReadController(private val trainingClassReadModel: TrainingCl
 
     @GetMapping("/classes/{classId}")
     fun getTrainingClass(@PathVariable classId: String): ResponseEntity<TrainingClassDetails> =
-            trainingClassReadModel.getTrainingClassDetailsById(classId)?.toResponse() ?: ResponseEntity.notFound().build()
-
+            trainingClassReadModel.getTrainingClassDetailsById(classId)
+                    .map { it.toResponse()}
+                    .getOrElse { notFoundResponse() }
 
     companion object {
         fun classResourceLocation(classId: String): URI =

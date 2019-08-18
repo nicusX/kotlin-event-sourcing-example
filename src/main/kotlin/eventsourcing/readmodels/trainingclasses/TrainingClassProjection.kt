@@ -1,5 +1,7 @@
 package eventsourcing.readmodels.trainingclasses
 
+import arrow.core.Option
+import arrow.core.getOrElse
 import eventsourcing.domain.*
 import eventsourcing.readmodels.DocumentStore
 import eventsourcing.readmodels.InconsistentReadModelException
@@ -28,14 +30,14 @@ class TrainingClassProjection (
                 val classId = event.classId
                 val studentId = event.studentId
                 log.debug("Adding Student {} to Class {} in read model", studentId, classId)
-                val student = lookupStudentContacts(studentId).toEnrolledStudent()
+                val student : EnrolledStudent =  studentsContactsStore.lookupByStudentIdOrFail(studentId).toEnrolledStudent()
                 trainingClassDetailsStore.addStudentToClass(classId, student, event.version!!)
                 // No need to update the class list
             }
 
             is StudentUnenrolled -> {
                 log.debug("Removing Student {} from Class {} in read model", event.studentId, event.classId)
-                val student = lookupStudentContacts(event.studentId).toEnrolledStudent()
+                val student = studentsContactsStore.lookupByStudentIdOrFail(event.studentId).toEnrolledStudent()
                 trainingClassDetailsStore.removeStudentFromClass(event.classId, student, event.version!!)
                 // No need to update the class list
             }
@@ -46,9 +48,6 @@ class TrainingClassProjection (
             }
         }
     }
-
-    private fun lookupStudentContacts(studentId: String) : StudentContacts =
-            studentsContactsStore.get(studentId).orNull() ?: throw InconsistentReadModelException // FIXME use Option
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(TrainingClassProjection::class.java)
@@ -78,6 +77,7 @@ private fun StudentContacts.toEnrolledStudent() =
                 contact = this.email) // We only support email contacts ;)
 
 private fun NewStudentRegistered.toStudentContacts() = StudentContacts(this.studentId, this.email)
+
 private fun DocumentStore<TrainingClassDetails>.addNewClass(newClass: TrainingClassDetails) {
     TrainingClassProjection.log.trace("Add Class to TrainingClassDetails view: {}", newClass)
     this.save(newClass.classId, newClass)
@@ -88,19 +88,29 @@ private fun SingleDocumentStore<TrainingClassList>.addNewClassAndSort(newClass: 
     this.save(((this.get()) + newClass).sortedBy { it.date })
 }
 
+private fun DocumentStore<StudentContacts>.lookupByStudentIdOrFail(studentId: String): StudentContacts =
+        // If the StudentContacts is not there, the Read Model is stale
+        this.get(studentId).getOrElse { throw InconsistentReadModelException }
+
+
+private fun DocumentStore<TrainingClassDetails>.lookupByClassIdOrFail(classId: ClassID): TrainingClassDetails =
+        // If TrainingClassDetails is not there, the Read Model is stale
+        this.get(classId).getOrElse { throw InconsistentReadModelException }
+
+
 private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old = this.get(classId).orNull() // We assume events are always processed in order, so the class exists // FIXME use Option
-    val new = old?.copy(
+    val old : TrainingClassDetails = this.lookupByClassIdOrFail(classId)
+    val new = old.copy(
             availableSpots = old.availableSpots - 1,
             students = old.students + student,
-            version = newVersion) ?: throw InconsistentReadModelException
+            version = newVersion)
     TrainingClassProjection.log.trace("Adding Student to Class in TrainingClassDetails view. Updating {} -> {}", old, new)
     this.save(classId, new)
 }
 
 private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old : TrainingClassDetails? = this.get(classId).orNull() // FIXME use Option
-    val new = old?.copy(
+    val old : TrainingClassDetails = this.lookupByClassIdOrFail(classId)
+    val new = old.copy(
                 availableSpots = old.availableSpots + 1,
                 students = old.students - student,
                 version = newVersion) ?: throw InconsistentReadModelException

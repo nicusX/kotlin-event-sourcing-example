@@ -1,6 +1,7 @@
 package eventsourcing.readmodels.trainingclasses
 
 import arrow.core.None
+import arrow.core.Option
 import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.readmodels.DocumentStore
@@ -26,9 +27,9 @@ internal class TrainingClassReadModelTest {
 
         whenever(trainingClassDetailsStore.get(any())).thenReturn(Some(aTrainingClassDetails))
 
-        val result = sut.getTrainingClassDetailsById(aTrainingClassDetails.classId)
+        val result : Option<TrainingClassDetails> = sut.getTrainingClassDetailsById(aTrainingClassDetails.classId)
 
-        assertThat(result).isEqualTo(aTrainingClassDetails)
+        assertThat(result.orNull()).isEqualTo(aTrainingClassDetails)
 
         verify(trainingClassDetailsStore).get(eq(aTrainingClassDetails.classId))
 
@@ -42,9 +43,9 @@ internal class TrainingClassReadModelTest {
 
         whenever(trainingClassDetailsStore.get(any())).thenReturn(None)
 
-        val result = sut.getTrainingClassDetailsById("NON-EXISTING-CLASS")
+        val result : Option<TrainingClassDetails> = sut.getTrainingClassDetailsById("NON-EXISTING-CLASS")
 
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(None)
 
         verify(trainingClassDetailsStore).get(eq("NON-EXISTING-CLASS"))
 
@@ -57,7 +58,7 @@ internal class TrainingClassReadModelTest {
         val sut = givenTrainingClassReadModel()
         whenever(trainingClassListStore.get()).thenReturn(emptyList())
 
-        val result = sut.allClasses()
+        val result : TrainingClassList = sut.allClasses()
         assertThat(result).isEmpty()
 
         verify(trainingClassListStore).get()

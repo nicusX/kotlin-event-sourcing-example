@@ -1,5 +1,6 @@
 package eventsourcing.readmodels
 
+import arrow.core.None
 import arrow.core.Option
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -35,7 +36,7 @@ internal class InMemoryDocumentStoreTest {
         val sut = givenAnEmptyDocumentStore()
 
         val res : Option<Dummy> = sut.get("-non-existing-key-")
-        assertThat(res).matches(Option<*>::isEmpty)
+        assertThat(res).isEqualTo(None)
     }
 }
 

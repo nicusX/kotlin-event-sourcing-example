@@ -39,7 +39,7 @@ class Student(id: StudentID) : AggregateRoot(id) {
             return student
         }
 
-        // FIXME use a Service querying a specialised Read Model containing emails only
+        // TODO use a Service querying a specialised Read Model containing emails only
         private fun StudentRepository.emailAlreadyInUse(email: EMail) : Boolean = this.getByEmail(email) != null
 
         val log : Logger = LoggerFactory.getLogger(Student::class.java)

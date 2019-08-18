@@ -1,5 +1,6 @@
 package eventsourcing.readmodels.studentdetails
 
+import arrow.core.Option
 import eventsourcing.domain.Event
 import eventsourcing.domain.Handles
 import eventsourcing.domain.NewStudentRegistered
@@ -40,5 +41,5 @@ class StudentDetailsProjection(private val studentDetailsStore: DocumentStore<St
  * External, read-only facade for the read model
  */
 class StudentDetailsReadModel(private val studentDetailsStore: DocumentStore<StudentDetails>) {
-    fun getStudentById(studentId: String) : StudentDetails? = studentDetailsStore.get(studentId).orNull() // FIXME use Option
+    fun getStudentById(studentId: String) : Option<StudentDetails> = studentDetailsStore.get(studentId)
 }

@@ -5,9 +5,9 @@ import java.util.*
 class StudentRepository(eventStore: EventStore): EventSourcedRepository<Student>(eventStore) {
     override fun new(id: AggregateID): Student = Student(id)
 
-    // FIXME move to a Service using a Read Model
+    // TODO move to a Service using a Read Model
     fun getByEmail(email: String) : Student? {
-        // FIXME implement (requires maintaining a specialised read-model) + Add test
+        // TODO implement (requires maintaining a specialised read-model) + Add test
         return null
     }
 }

@@ -1,10 +1,12 @@
 package eventsourcing
 
+import arrow.core.Option
 import eventsourcing.domain.AggregateID
 import eventsourcing.domain.AggregateRoot
 import eventsourcing.domain.Event
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.ObjectAssert
 
 internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAssert, Iterable<Event>>(actual, EventsAssert::class.java) {
 
