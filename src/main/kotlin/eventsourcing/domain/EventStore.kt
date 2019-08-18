@@ -1,11 +1,20 @@
 package eventsourcing.domain
 
-import java.lang.Exception
+import arrow.core.Either
+import arrow.core.None
+import arrow.core.Option
 
 interface EventStore {
-    fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Long? = null)
-    fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Iterable<Event>?
+    fun saveEvents(
+            aggregateType: AggregateType,
+            aggregateId: AggregateID,
+            events: Iterable<Event>,
+            expectedVersion: Option<Long> = None) : Either<Problem, Iterable<Event>>
+
+    fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Option<Iterable<Event>>
 }
 
-class ConcurrencyException(aggregateType: AggregateType, aggregateID: AggregateID, expectedVersion: Long, actualVersion: Long)
-    : Exception("Concurrency violation on ${aggregateType.toString()}:${aggregateID.toString()}. Expected version: $expectedVersion, Actual version: $actualVersion")
+
+sealed class Problem {
+    object ConcurrentChangeDetected : Problem()
+}

@@ -1,5 +1,6 @@
 package eventsourcing.eventstore
 
+import arrow.core.*
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatEvents
 import eventsourcing.domain.*
@@ -25,14 +26,16 @@ internal class InMemoryEventStoreTest {
                     StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) })
 
-        val extractedEvents = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
+        val extractedEvents: Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
                 StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons", 1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
-        assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
+        assertThatEvents(extractedEvents)
+                .isNotEmpty()
+                .onlyContainsInOrder(expectedVersionedEvents)
     }
 
     @Test
@@ -50,12 +53,14 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 2L
-        sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, aggregateVersion)
+        val savedEvents: Either<Problem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+
+        assertThat(savedEvents.isRight()).isTrue()
     }
 
 
     @Test
-    fun `given an Event Store containing 3 events of an aggregate, when I store new events specifying a version != 2, it should fail with a ConcurrencyException`() {
+    fun `given an Event Store containing 3 events of an aggregate, when I store new events specifying a version != 2, it should fail with a ConcurrentChangeDetected problem`() {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -69,9 +74,10 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 42L
-        assertThrows<ConcurrencyException> {
-            sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, aggregateVersion)
-        }
+        val savedEvents: Either<Problem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+
+        assertThat(savedEvents.isLeft()).isTrue()
+        assertThat(savedEvents.swap().orNull()).isEqualTo(Problem.ConcurrentChangeDetected)
     }
 
 
@@ -90,14 +96,17 @@ internal class InMemoryEventStoreTest {
                 )) })
 
 
-        val extractedEvents = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
+        val extractedEvents: Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
                 StudentUnenrolled(AN_AGGREGATE_ID, "student-2", "some reasons",1),
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
-        assertThatEvents(extractedEvents!!).onlyContainsInOrder(expectedVersionedEvents)
+
+        assertThatEvents(extractedEvents)
+                .isNotEmpty()
+                .onlyContainsInOrder(expectedVersionedEvents)
     }
 
     @Test
@@ -110,8 +119,8 @@ internal class InMemoryEventStoreTest {
                 )) } )
 
         val nonExistingAggregateID = "this-id-does-not-exist"
-        val events : Iterable<Event>? = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
-        assertThat(events).isNull()
+        val events : Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
+        assertThatEvents(events).isEmpty()
     }
 
     @Test

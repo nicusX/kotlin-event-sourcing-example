@@ -1,6 +1,9 @@
 package eventsourcing
 
+import arrow.core.None
 import arrow.core.Option
+import arrow.core.Some
+import arrow.core.getOrElse
 import eventsourcing.domain.AggregateID
 import eventsourcing.domain.AggregateRoot
 import eventsourcing.domain.Event
@@ -8,16 +11,28 @@ import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.ObjectAssert
 
-internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAssert, Iterable<Event>>(actual, EventsAssert::class.java) {
+internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<EventsAssert, Option<Iterable<Event>>>(actual, EventsAssert::class.java) {
 
+    private fun Option<Iterable<Event>>.safeExtract() : Iterable<Event> =
+            this.getOrElse { emptyList() }
+
+    fun isNotEmpty() : EventsAssert {
+        Assertions.assertThat(actual).isInstanceOf(Some::class.java)
+        return this
+    }
+
+    fun isEmpty() : EventsAssert {
+        Assertions.assertThat(actual).isEqualTo(None)
+        return this
+    }
 
     fun contains(expectedSize: Int): EventsAssert {
-        Assertions.assertThat(actual).hasSize(expectedSize)
+        Assertions.assertThat(actual.safeExtract()).hasSize(expectedSize)
         return this
     }
 
     fun containsAllInOrder(expected: List<Event>): EventsAssert {
-        for ((i, actualEvent) in actual.withIndex()) {
+        for ((i, actualEvent) in actual.safeExtract().withIndex()) {
             Assertions.assertThat(actualEvent).isEqualTo(expected[i])
         }
         return this
@@ -30,7 +45,7 @@ internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAsse
             this.onlyContainsInOrder(listOf(expected))
 
     fun containsAllEventTypesInOrder(expected: List<Class<*>>): EventsAssert {
-        for ((i, actualEvent) in actual.withIndex()) {
+        for ((i, actualEvent) in actual.safeExtract().withIndex()) {
             Assertions.assertThat(actualEvent).isInstanceOf(expected[i])
         }
         return this
@@ -48,9 +63,9 @@ internal class EventsAssert(actual: Iterable<Event>) : AbstractAssert<EventsAsse
 
     companion object {
         fun assertThatAggregateUncommitedChanges(aggregate: AggregateRoot): EventsAssert =
-                EventsAssert(aggregate.getUncommittedChanges())
+                EventsAssert(Some(aggregate.getUncommittedChanges()))
 
-        fun assertThatEvents(actual: Iterable<Event>): EventsAssert =
+        fun assertThatEvents(actual: Option<Iterable<Event>>): EventsAssert =
                 EventsAssert(actual)
     }
 }

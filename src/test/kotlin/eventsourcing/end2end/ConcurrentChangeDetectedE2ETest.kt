@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.client.TestRestTemplate
 
-internal class ConcurrencyViolationE2ETest(@Autowired template : TestRestTemplate) : BaseE2EJourneyTest(template) {
+internal class ConcurrentChangeDetectedE2ETest(@Autowired template : TestRestTemplate) : BaseE2EJourneyTest(template) {
 
     @Test
     fun `UNHAPPY | Schedule Class + Enroll Student but with wrong expected version and get rejected`() {

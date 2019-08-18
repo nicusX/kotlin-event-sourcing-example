@@ -1,5 +1,6 @@
 package eventsourcing.eventstore
 
+import arrow.core.*
 import eventsourcing.domain.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,51 +15,58 @@ abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>
 
     protected data class EventDescriptor(val streamKey: StreamKey, val version: Long, val event: Event)
 
-    protected abstract fun stream(key: StreamKey): Iterable<EventDescriptor>?
+    protected abstract fun stream(key: StreamKey): Option<Iterable<EventDescriptor>>
 
     protected abstract fun appendEventDescriptor(key: StreamKey, eventDescriptor: EventDescriptor)
 
-    protected abstract fun isEmptyStream(key: StreamKey) : Boolean
 
-    override fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Iterable<Event>? {
+    override fun getEventsForAggregate(aggregateType: AggregateType, aggregateId: AggregateID): Option<Iterable<Event>> {
         log.debug("Retrieving events for aggregate {}:{}", aggregateType, aggregateId)
         val key = StreamKey(aggregateType, aggregateId)
-        return stream(key)?.map{ it.event }
+        return stream(key).map{ it.map { it.event } }
     }
 
-    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Long?) {
+    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Option<Long>) : Either<Problem, Iterable<Event>> {
         val streamKey = StreamKey(aggregateType, aggregateId)
-        log.debug("Saving new events for {}. Expected version: {}", streamKey, expectedVersion ?: "-none-")
+        log.debug("Saving new events for {}. Expected version: {}", streamKey, expectedVersion)
 
-        if( expectedVersion != null) checkLatestEventVersionInStreamMatches(streamKey, expectedVersion)
-
-        appendAndPublish(streamKey, events, expectedVersion)
-    }
-
-    private fun checkLatestEventVersionInStreamMatches(key: StreamKey, expectedVersion: Long) {
-        if ( !isEmptyStream(key) ) {
-            log.trace("Checking whether the latest event in Stream {} matches {}", key, expectedVersion)
-            val latestEventDescriptor = stream(key)!!.last()
-            if ( latestEventDescriptor.version != expectedVersion )
-                throw ConcurrencyException(key.aggregateType, key.aggregateID, expectedVersion, latestEventDescriptor.version)
+        return if ( stream(streamKey).concurrentChangeDetected(expectedVersion) ) {
+            log.debug("Concurrent change detected")
+            Left(Problem.ConcurrentChangeDetected)
+        } else {
+            log.debug("Appending and publishing {} events", events.count())
+            Right(appendAndPublish(streamKey, events, expectedVersion))
         }
     }
 
-    private fun appendAndPublish(streamKey: StreamKey, events: Iterable<Event>, previousAggregateVersion: Long?  )  {
-        val baseVersion = previousAggregateVersion ?: -1
-        for ( (i, event) in events.withIndex()) {
-            val eventVersion = baseVersion + i + 1
 
-            // Events have a version when stored in a stream and published
-            val versionedEvent = event.copyWithVersion(eventVersion)
-            val eventDescriptor = EventDescriptor(streamKey, eventVersion, versionedEvent)
+    private fun Option<Iterable<EventDescriptor>>.concurrentChangeDetected(expectedVersion: Option<Long>) : Boolean =
+            expectedVersion.map {  expVersion ->
+                this.map { events -> events.last() }
+                        .exists { event -> event.version != expVersion }
+            }.getOrElse { false }
 
-            log.debug("Appending event {} to Stream {}", eventDescriptor, streamKey)
-            appendEventDescriptor(streamKey, eventDescriptor )
 
-            log.trace("Publishing event: {}", versionedEvent)
-            eventPublisher.publish(versionedEvent)
-        }
+
+    private fun appendAndPublish(streamKey: StreamKey, events: Iterable<Event>, previousAggregateVersion: Option<Long> ) : Iterable<Event> {
+        val baseVersion : Long = previousAggregateVersion.getOrElse { -1 }
+        return sequence {
+            for ( (i, event) in events.withIndex()) {
+                val eventVersion = baseVersion + i + 1
+
+                // Events have a version when stored in a stream and published
+                val versionedEvent = event.copyWithVersion(eventVersion)
+                yield(versionedEvent)
+
+                val eventDescriptor = EventDescriptor(streamKey, eventVersion, versionedEvent)
+
+                log.debug("Appending event {} to Stream {}", eventDescriptor, streamKey)
+                appendEventDescriptor(streamKey, eventDescriptor )
+
+                log.trace("Publishing event: {}", versionedEvent)
+                eventPublisher.publish(versionedEvent)
+            }
+        }.toList()
     }
 
     companion object {

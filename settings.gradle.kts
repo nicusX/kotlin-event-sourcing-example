@@ -1,1 +1,1 @@
-rootProject.name = "kotlin-event-sourcing-minimal"
+rootProject.name = "kotlin-event-sourcing-example"

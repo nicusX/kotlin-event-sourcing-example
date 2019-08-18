@@ -1,5 +1,6 @@
 package eventsourcing.eventstore
 
+import arrow.core.Option
 import eventsourcing.domain.Event
 import eventsourcing.domain.EventPublisher
 
@@ -10,9 +11,9 @@ import eventsourcing.domain.EventPublisher
 class InMemoryEventStore(eventPublisher : EventPublisher<Event>) : BaseEventStore(eventPublisher) {
     private val streams: MutableMap<StreamKey,  MutableList<EventDescriptor>> = mutableMapOf()
 
-    override fun stream(key: StreamKey): Iterable<EventDescriptor>? = streams[key]?.toList()
-
-    override fun isEmptyStream(key: StreamKey): Boolean = streams[key]?.isEmpty() ?: true
+    override fun stream(key: StreamKey): Option<Iterable<EventDescriptor>> =
+            Option.fromNullable( streams[key] )
+                    .map { it.toList() }
 
     override fun appendEventDescriptor(key: StreamKey, eventDescriptor: EventDescriptor) {
         val stream = streams[key] ?: mutableListOf()

@@ -1,5 +1,8 @@
 package eventsourcing.domain
 
+import arrow.core.None
+import arrow.core.Right
+import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.TrainingClass.Companion.scheduleNewClass
 import org.assertj.core.api.Assertions.assertThat
@@ -11,7 +14,9 @@ internal class EventSourcedRepositoryTest {
 
     @Test
     fun `given a aggregate with uncommitted events, when I save the aggregate, then all uncommitted events are saved in the event store and no uncommited change remains in the aggregate`() {
-        val eventStore = mock<EventStore>()
+        val eventStore = mock<EventStore>() {
+            on { saveEvents(any(), any(), any(), any())}.thenReturn( Right(emptyList()) )
+        }
         val sut = eventSourcedRepo(eventStore)
 
         val clazz = scheduleNewClass("some-title", LocalDate.now(), 10)
@@ -20,7 +25,7 @@ internal class EventSourcedRepositoryTest {
         sut.save(clazz)
 
         assertThat(clazz.getUncommittedChanges()).isEmpty()
-        verify(eventStore, times(1)).saveEvents(eq(TrainingClass.TYPE), eq(clazz.id), argForWhich{ count() == 2  }, isNull())
+        verify(eventStore, times(1)).saveEvents(eq(TrainingClass.TYPE), eq(clazz.id), argForWhich{ count() == 2  }, eq(None))
         verifyNoMoreInteractions(eventStore)
     }
 
@@ -29,9 +34,9 @@ internal class EventSourcedRepositoryTest {
         val classId = "class-id"
         val eventStore = mock<EventStore> {
             on { getEventsForAggregate(TrainingClass.TYPE, classId) }
-                    .doReturn( listOf(
+                    .doReturn( Some(listOf(
                             NewClassScheduled(classId,"some-title", LocalDate.now(), 10),
-                            StudentEnrolled(classId, "a-student")))
+                            StudentEnrolled(classId, "a-student"))))
         }
         val sut = eventSourcedRepo(eventStore)
 
@@ -47,7 +52,7 @@ internal class EventSourcedRepositoryTest {
     fun `given an event store, when I get a non-existing aggregate by Id, then an AggregateNotFoundException is thrown`(){
         val classId = "class-id"
         val eventStore = mock<EventStore> {
-            on { getEventsForAggregate(TrainingClass.TYPE, classId) }.doReturn( null )
+            on { getEventsForAggregate(TrainingClass.TYPE, classId) }.doReturn( None )
         }
         val sut = eventSourcedRepo(eventStore)
 
