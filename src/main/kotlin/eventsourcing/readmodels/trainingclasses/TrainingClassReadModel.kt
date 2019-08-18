@@ -45,7 +45,7 @@ class TrainingClassReadModel (
             trainingClassListStore.get()
 
     fun getTrainingClassDetailsById(classId: String) : TrainingClassDetails? =
-            trainingClassDetailsStore.get(classId)
+            trainingClassDetailsStore.get(classId).orNull() // FIXME use Option
 
     // Note the Student Contacts view is not exposed. It is only used internally
 }

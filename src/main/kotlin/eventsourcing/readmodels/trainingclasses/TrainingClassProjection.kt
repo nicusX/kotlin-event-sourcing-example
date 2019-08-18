@@ -48,7 +48,7 @@ class TrainingClassProjection (
     }
 
     private fun lookupStudentContacts(studentId: String) : StudentContacts =
-            studentsContactsStore.get(studentId) ?: throw InconsistentReadModelException
+            studentsContactsStore.get(studentId).orNull() ?: throw InconsistentReadModelException // FIXME use Option
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(TrainingClassProjection::class.java)
@@ -89,7 +89,7 @@ private fun SingleDocumentStore<TrainingClassList>.addNewClassAndSort(newClass: 
 }
 
 private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old = this.get(classId) // We assume events are always processed in order, so the class exists
+    val old = this.get(classId).orNull() // We assume events are always processed in order, so the class exists // FIXME use Option
     val new = old?.copy(
             availableSpots = old.availableSpots - 1,
             students = old.students + student,
@@ -99,7 +99,7 @@ private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: Strin
 }
 
 private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old : TrainingClassDetails? = this.get(classId)
+    val old : TrainingClassDetails? = this.get(classId).orNull() // FIXME use Option
     val new = old?.copy(
                 availableSpots = old.availableSpots + 1,
                 students = old.students - student,

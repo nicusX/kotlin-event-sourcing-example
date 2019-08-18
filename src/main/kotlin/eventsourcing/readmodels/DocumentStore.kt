@@ -1,12 +1,14 @@
 package eventsourcing.readmodels
 
+import arrow.core.Option
+
 /**
  * Interface to a generic, basic document store
  * containing a single type of document
  */
 interface DocumentStore<D> {
     fun save(key: String, document: D)
-    fun get(key: String) : D?
+    fun get(key: String) : Option<D>
 }
 
 /**

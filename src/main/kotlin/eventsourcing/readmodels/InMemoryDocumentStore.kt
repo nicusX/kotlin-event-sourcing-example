@@ -1,12 +1,14 @@
 package eventsourcing.readmodels
 
+import arrow.core.Option
+
 /**
  * Simple implementation of Document Store, thread-safe, keeping everything in memory
  */
 class InMemoryDocumentStore<D> : DocumentStore<D> {
     private val store: MutableMap<String, D> = mutableMapOf()
 
-    @Synchronized override fun get(key: String): D? = store[key]
+    @Synchronized override fun get(key: String): Option<D> =  Option.fromNullable(store[key])
 
     @Synchronized override fun save(key: String, document: D) {
         store[key] = document

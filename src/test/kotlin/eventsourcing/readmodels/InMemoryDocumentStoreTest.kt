@@ -1,8 +1,8 @@
 package eventsourcing.readmodels
 
+import arrow.core.Option
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 internal class InMemoryDocumentStoreTest {
     @Test
@@ -13,8 +13,8 @@ internal class InMemoryDocumentStoreTest {
         val doc = Dummy(id, 0)
         sut.save(id, doc)
 
-        val retrieve = sut.get(id)
-        assertThat(retrieve).isEqualTo(doc)
+        val retrieve: Option<Dummy> = sut.get(id)
+        assertThat(retrieve.orNull()).isEqualTo(doc)
     }
 
     @Test
@@ -26,16 +26,16 @@ internal class InMemoryDocumentStoreTest {
         val new = Dummy(id, 1)
         sut.save(id, new)
 
-        val retrieve = sut.get(id)
-        assertThat(retrieve).isEqualTo(new)
+        val retrieve : Option<Dummy> = sut.get(id)
+        assertThat(retrieve.orNull()).isEqualTo(new)
     }
 
     @Test
     fun `given a store, when I retrieve a document not in the store, then I get null`(){
         val sut = givenAnEmptyDocumentStore()
 
-        val res = sut.get("-non-existing-key-")
-        assertThat(res).isNull()
+        val res : Option<Dummy> = sut.get("-non-existing-key-")
+        assertThat(res).matches(Option<*>::isEmpty)
     }
 }
 
