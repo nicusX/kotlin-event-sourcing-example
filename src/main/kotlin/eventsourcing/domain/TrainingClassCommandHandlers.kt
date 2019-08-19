@@ -1,11 +1,12 @@
 package eventsourcing.domain
 
-import arrow.core.*
+import arrow.core.Some
+import arrow.core.flatMap
 
 // TODO May replace chains of map/flatMap with Arrow comprehensions
 
 fun handleScheduleNewClass(classRepository: TrainingClassRepository)
-        : (ScheduleNewClass) -> Either<Problem, ScheduleNewClassSuccess> = { command: ScheduleNewClass ->
+        : (ScheduleNewClass) -> Result<Failure, ScheduleNewClassSuccess> = { command: ScheduleNewClass ->
     TrainingClass.scheduleNewClass(command.title, command.date, command.size)
             .flatMap { clazz ->
                 classRepository.save(clazz)
@@ -14,7 +15,7 @@ fun handleScheduleNewClass(classRepository: TrainingClassRepository)
 }
 
 fun handleEnrollStudent(classRepository: TrainingClassRepository)
-        : (EnrollStudent) -> Either<Problem, EnrollStudentSuccess> = { command: EnrollStudent ->
+        : (EnrollStudent) -> Result<Failure, EnrollStudentSuccess> = { command: EnrollStudent ->
     classRepository.getById(command.classId)
             .toEither { AggregateNotFound }
             .flatMap { clazz -> clazz.enrollStudent(command.studentId)}
@@ -24,7 +25,7 @@ fun handleEnrollStudent(classRepository: TrainingClassRepository)
 
 
 fun handleUnenrollStudent(classRepository: TrainingClassRepository)
-        : (UnenrollStudent) -> Either<Problem, UnenrollStudentSuccess> = { command : UnenrollStudent ->
+        : (UnenrollStudent) -> Result<Failure, UnenrollStudentSuccess> = { command : UnenrollStudent ->
     classRepository.getById(command.classId)
             .toEither { AggregateNotFound }
             .flatMap { clazz ->  clazz.unenrollStudent(command.studentId, command.reason)}

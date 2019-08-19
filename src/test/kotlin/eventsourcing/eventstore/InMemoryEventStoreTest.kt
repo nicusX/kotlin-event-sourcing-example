@@ -1,12 +1,15 @@
 package eventsourcing.eventstore
 
-import arrow.core.*
-import com.nhaarman.mockitokotlin2.*
+import arrow.core.Option
+import arrow.core.Some
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import eventsourcing.EventsAssert.Companion.assertThatEvents
+import eventsourcing.ResultAssert.Companion.assertThatResult
 import eventsourcing.domain.*
-import org.assertj.core.api.Assertions.assertThat
+import eventsourcing.domain.EventStoreFailure.ConcurrentChangeDetected
 import org.junit.jupiter.api.Test
-
 
 val AGGREGATE_TYPE : AggregateType = TrainingClass.TYPE
 const val AN_AGGREGATE_ID : ClassID = "aggr012"
@@ -16,7 +19,7 @@ const val ANOTHER_AGGREGATE_ID : ClassID = "aggr045"
 internal class InMemoryEventStoreTest {
 
     @Test
-    fun `given an Event Store containing 3 events of an aggregate, when I retrieve aggregate events, it should return all events, in order, with version 0 to 2`() {
+    fun `given an Event Store containing 3 Events of a single Aggregate, when I retrieve the Events of the Aggregate, then it returns all Events, in order, with version 0 to 2`() {
 
         val sut: EventStore = givenAnInMemoryEventStore (
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
@@ -25,7 +28,7 @@ internal class InMemoryEventStoreTest {
                     StudentEnrolled(AN_AGGREGATE_ID, "student-3")
                 )) })
 
-        val extractedEvents: Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
+        val extractedEvents = sut.getEventsForAggregate(AGGREGATE_TYPE, AN_AGGREGATE_ID)
 
         val expectedVersionedEvents = listOf(
                 StudentEnrolled(AN_AGGREGATE_ID, "student-1", 0),
@@ -38,7 +41,7 @@ internal class InMemoryEventStoreTest {
     }
 
     @Test
-    fun `given an Event Store containing 3 events of an aggregate, when I store new events specifying version = 2, it should succeed`() {
+    fun `given an Event Store containing 3 events of a single Aggregate, when I store new events specifying version = 2, then it succeeds`() {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -52,14 +55,14 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 2L
-        val savedEvents: Either<EventStoreProblem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+        val result = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
 
-        assertThat(savedEvents.isRight()).isTrue()
+        assertThatResult(result).isSuccess()
     }
 
 
     @Test
-    fun `given an Event Store containing 3 events of an aggregate, when I store new events specifying a version != 2, it should fail with a ConcurrentChangeDetected problem`() {
+    fun `given an Event Store containing 3 events of a single Aggregate, when I store new events specifying a version != 2, than it fail with a ConcurrentChangeDetected`() {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -73,16 +76,17 @@ internal class InMemoryEventStoreTest {
         )
 
         val aggregateVersion = 42L
-        val savedEvents: Either<EventStoreProblem, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
+        val result: Result<EventStoreFailure, Iterable<Event>> = sut.saveEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, moreEvents, Some(aggregateVersion))
 
-        assertThat(savedEvents.isLeft()).isTrue()
-        assertThat(savedEvents.swap().orNull()).isEqualTo(EventStoreProblem.ConcurrentChangeDetected)
+        assertThatResult(result)
+                .isFailure()
+                .failureIsA<ConcurrentChangeDetected>()
     }
 
 
 
     @Test
-    fun `given an Event Store containing events of multiple aggregates, when I retrieve events of one aggregate, it should only retrieve events of the specified aggregate`() {
+    fun `given an Event Store containing events of 2 Aggregates, when I retrieve events of one aggregate, then it retrieves Events of the specified Aggregate`() {
         val sut : EventStore = givenAnInMemoryEventStore (
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -109,7 +113,7 @@ internal class InMemoryEventStoreTest {
     }
 
     @Test
-    fun `given an Event Store only containing events of an aggregate, when I retrieve events for a different aggregate, it should return no events`() {
+    fun `given an Event Store containing Events of a single Aggregate, when I retrieve Events for a different Aggregate, then it returns no events`() {
         val sut : EventStore = givenAnInMemoryEventStore(
                 { withSavedEvents(AGGREGATE_TYPE, AN_AGGREGATE_ID, listOf(
                         StudentEnrolled(AN_AGGREGATE_ID, "student-1"),
@@ -118,12 +122,12 @@ internal class InMemoryEventStoreTest {
                 )) } )
 
         val nonExistingAggregateID = "this-id-does-not-exist"
-        val events : Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
+        val events = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
         assertThatEvents(events).isNone()
     }
 
     @Test
-    fun `given an empty Event Store, when I store 3 new events of the same aggregate, it should publish all new events with version 0 to 2`() {
+    fun `given an empty Event Store, when I store 3 new Events of the same Aggregate, then it publishes all new Events in order with versions 0,1 and 2`() {
         val publisher = mock<EventPublisher<Event>>()
         val sut : EventStore = givenAnInMemoryEventStore(eventPublisher = publisher)
 

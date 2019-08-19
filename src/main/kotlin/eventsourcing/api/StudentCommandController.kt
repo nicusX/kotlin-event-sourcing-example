@@ -2,7 +2,7 @@ package eventsourcing.api
 
 import arrow.core.getOrHandle
 import eventsourcing.domain.AggregateNotFound
-import eventsourcing.domain.EventStoreProblem
+import eventsourcing.domain.EventStoreFailure
 import eventsourcing.domain.RegisterNewStudent
 import eventsourcing.domain.RegisterNewStudentSuccess
 import org.springframework.http.HttpHeaders
@@ -21,10 +21,10 @@ class StudentCommandController(private val dispatcher: CommandDispatcher) {
             dispatcher.handle(req.toCommand()).map { success ->
                 val studentId = (success as RegisterNewStudentSuccess).studentID
                 acceptedResponse(studentId)
-            }.mapLeft { problem ->
-                when (problem) {
+            }.mapLeft { failure ->
+                when (failure) {
                     is AggregateNotFound -> notFoundResponse("Aggregate not Found")
-                    is EventStoreProblem.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
+                    is EventStoreFailure.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
                     else -> serverErrorResponse()
                 }
             }.getOrHandle { errorResponse -> errorResponse }

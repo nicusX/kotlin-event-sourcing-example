@@ -1,6 +1,9 @@
 package eventsourcing.eventstore
 
-import arrow.core.*
+import arrow.core.Left
+import arrow.core.Option
+import arrow.core.Right
+import arrow.core.getOrElse
 import eventsourcing.domain.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,13 +29,13 @@ abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>
         return stream(key).map{ it.map { it.event } }
     }
 
-    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Option<Long>) : Either<EventStoreProblem, Iterable<Event>> {
+    override fun saveEvents(aggregateType: AggregateType, aggregateId: AggregateID, events: Iterable<Event>, expectedVersion: Option<Long>) : Result<EventStoreFailure, Iterable<Event>> {
         val streamKey = StreamKey(aggregateType, aggregateId)
         log.debug("Saving new events for {}. Expected version: {}", streamKey, expectedVersion)
 
         return if ( stream(streamKey).concurrentChangeDetected(expectedVersion) ) {
             log.debug("Concurrent change detected")
-            Left(EventStoreProblem.ConcurrentChangeDetected)
+            Left(EventStoreFailure.ConcurrentChangeDetected)
         } else {
             log.debug("Appending and publishing {} events", events.count())
             Right(appendAndPublish(streamKey, events, expectedVersion))

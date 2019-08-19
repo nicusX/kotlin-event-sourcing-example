@@ -1,18 +1,16 @@
 package eventsourcing.domain
 
-import arrow.core.Either
 import arrow.core.Option
 import arrow.core.Right
 import arrow.core.flatMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
 abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) : Repository<A> {
 
     private val store = eventStore
 
-    override fun save(aggregate: A, expectedVersion: Option<Long>) : Either<Problem, ChangesSuccessfullySaved> {
+    override fun save(aggregate: A, expectedVersion: Option<Long>) : Result<Failure, ChangesSuccessfullySaved> {
         log.debug("Storing uncommitted event for '${aggregate.aggregateType()}:$aggregate.id'")
         val uncommitedChanges = aggregate.getUncommittedChanges()
 

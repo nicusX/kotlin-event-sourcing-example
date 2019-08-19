@@ -1,11 +1,6 @@
 package eventsourcing.api
 
-import arrow.core.Either
 import eventsourcing.domain.*
-import eventsourcing.domain.handleEnrollStudent
-import eventsourcing.domain.handleRegisterNewStudent
-import eventsourcing.domain.handleScheduleNewClass
-import eventsourcing.domain.handleUnenrollStudent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,13 +12,13 @@ import org.slf4j.LoggerFactory
  */
 class CommandDispatcher(private val classRepo: TrainingClassRepository, private val studentRepo : StudentRepository) {
 
-    val scheduleNewClassHandler: (ScheduleNewClass) -> Either<Problem, ScheduleNewClassSuccess> = handleScheduleNewClass(classRepo)
-    val enrollStudentHandler: (EnrollStudent) -> Either<Problem, EnrollStudentSuccess> = handleEnrollStudent(classRepo)
-    val unenrollStudentHandler: (UnenrollStudent) -> Either<Problem, UnenrollStudentSuccess> = handleUnenrollStudent(classRepo)
-    val registerNewStudentHandler: (RegisterNewStudent) -> Either<Problem, RegisterNewStudentSuccess> = handleRegisterNewStudent(studentRepo)
+    val scheduleNewClassHandler: (ScheduleNewClass) -> Result<Failure, ScheduleNewClassSuccess> = handleScheduleNewClass(classRepo)
+    val enrollStudentHandler: (EnrollStudent) -> Result<Failure, EnrollStudentSuccess> = handleEnrollStudent(classRepo)
+    val unenrollStudentHandler: (UnenrollStudent) -> Result<Failure, UnenrollStudentSuccess> = handleUnenrollStudent(classRepo)
+    val registerNewStudentHandler: (RegisterNewStudent) -> Result<Failure, RegisterNewStudentSuccess> = handleRegisterNewStudent(studentRepo)
 
     // Dispatches
-    fun handle(command: Command) : Either<Problem, Success> {
+    fun handle(command: Command) : Result<Failure, Success> {
         log.debug("Handing command: {}", command)
         return when(command) {
             is ScheduleNewClass -> scheduleNewClassHandler(command)

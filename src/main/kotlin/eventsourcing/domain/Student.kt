@@ -1,6 +1,5 @@
 package eventsourcing.domain
 
-import arrow.core.Either
 import arrow.core.Left
 import arrow.core.Right
 import org.slf4j.Logger
@@ -31,7 +30,7 @@ class Student(id: StudentID) : AggregateRoot(id) {
     }
 
     companion object {
-        fun registerNewStudent(email: EMail, fullname: String, repository: StudentRepository): Either<StudentInvariantViolation, Student> =
+        fun registerNewStudent(email: EMail, fullname: String, repository: StudentRepository): Result<StudentInvariantViolation, Student> =
                 when {
                     repository.emailAlreadyInUse(email) -> Left(StudentInvariantViolation.EmailAlreadyInUse)
                     else -> {
@@ -49,6 +48,6 @@ class Student(id: StudentID) : AggregateRoot(id) {
     }
 }
 
-sealed class StudentInvariantViolation : Problem {
+sealed class StudentInvariantViolation : Failure {
     object EmailAlreadyInUse : StudentInvariantViolation()
 }

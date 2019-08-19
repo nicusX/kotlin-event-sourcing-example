@@ -1,6 +1,5 @@
 package eventsourcing.domain
 
-import arrow.core.Either
 import arrow.core.Left
 import arrow.core.Right
 import org.slf4j.Logger
@@ -58,7 +57,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     // 2. (if successful) apply changes and queue the new event
     // may have side-effects
 
-    fun enrollStudent(studentId: StudentID): Either<TrainingClassInvariantViolation, TrainingClass> {
+    fun enrollStudent(studentId: StudentID): Result<TrainingClassInvariantViolation, TrainingClass> {
         log.debug("Enrolling student {} to class {}", studentId, this.id)
         return when {
             this.enrolledStudents.contains(studentId) -> Left(TrainingClassInvariantViolation.StudentAlreadyEnrolled)
@@ -67,7 +66,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
         }
     }
 
-    fun unenrollStudent(studentId: StudentID, reason: String): Either<TrainingClassInvariantViolation, TrainingClass> {
+    fun unenrollStudent(studentId: StudentID, reason: String): Result<TrainingClassInvariantViolation, TrainingClass> {
         log.debug("Enrolling student {} from class {}. Reason: '{}'", studentId, this.id, reason)
         return when {
             !this.enrolledStudents.contains(studentId) -> Left(TrainingClassInvariantViolation.UnenrollingNotEnrolledStudent)
@@ -76,7 +75,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     }
 
     companion object {
-        fun scheduleNewClass(title: String, date: LocalDate, size: Int): Either<TrainingClassInvariantViolation, TrainingClass> =
+        fun scheduleNewClass(title: String, date: LocalDate, size: Int): Result<TrainingClassInvariantViolation, TrainingClass> =
                 when {
                     size <= 0 -> Left(TrainingClassInvariantViolation.InvalidClassSize)
                     else -> {
@@ -91,7 +90,7 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     }
 }
 
-sealed class TrainingClassInvariantViolation : Problem {
+sealed class TrainingClassInvariantViolation : Failure {
     object StudentAlreadyEnrolled : TrainingClassInvariantViolation()
     object UnenrollingNotEnrolledStudent : TrainingClassInvariantViolation()
     object ClassHasNoAvailableSpots : TrainingClassInvariantViolation()

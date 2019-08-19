@@ -116,7 +116,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails for a concurrency issue, then it returns 409 CONFLICT and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenReturn(Left(EventStoreProblem.ConcurrentChangeDetected))
+                .thenReturn(Left(EventStoreFailure.ConcurrentChangeDetected))
 
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
@@ -177,7 +177,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given POST to Unenroll Student endpoint, when command handling fails for a concurrency issue, then it returns 409 CONFLICT and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenReturn(Left(EventStoreProblem.ConcurrentChangeDetected))
+                .thenReturn(Left(EventStoreFailure.ConcurrentChangeDetected))
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)

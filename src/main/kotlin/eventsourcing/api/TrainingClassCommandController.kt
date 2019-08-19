@@ -23,12 +23,12 @@ class TrainingClassCommandController(private val dispatcher: CommandDispatcher) 
             dispatcher.handle(req.toCommand()).map { success: Success ->
                 val classId = (success as ScheduleNewClassSuccess).classId
                 acceptedResponse(classId)
-            }.mapLeft { problem: Problem ->
-                when (problem) {
+            }.mapLeft { failure: Failure ->
+                when (failure) {
                     is TrainingClassInvariantViolation.InvalidClassSize ->
                         unprocessableEntityResponse("Invalid Class Size")
                     is AggregateNotFound -> notFoundResponse("Aggregate not Found")
-                    is EventStoreProblem.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
+                    is EventStoreFailure.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
                     else -> serverErrorResponse()
                 }
             }.getOrHandle { errorResponse -> errorResponse }
@@ -38,12 +38,12 @@ class TrainingClassCommandController(private val dispatcher: CommandDispatcher) 
     fun enrollStudent(@PathVariable classId: String, @Valid @RequestBody req: EnrollStudentRequest): ResponseEntity<*> =
             dispatcher.handle(req.toCommandWithClassId(classId)).map { _: Success ->
                 acceptedResponse(classId)
-            }.mapLeft { problem ->
-                when (problem) {
+            }.mapLeft { failure ->
+                when (failure) {
                     is TrainingClassInvariantViolation.StudentAlreadyEnrolled -> unprocessableEntityResponse("Student already enrolled")
                     is TrainingClassInvariantViolation.ClassHasNoAvailableSpots -> unprocessableEntityResponse("No available spots")
                     is AggregateNotFound -> notFoundResponse("Aggregate not Found")
-                    is EventStoreProblem.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
+                    is EventStoreFailure.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
                     else -> serverErrorResponse()
                 }
             }.getOrHandle { errorResponse -> errorResponse }
@@ -53,11 +53,11 @@ class TrainingClassCommandController(private val dispatcher: CommandDispatcher) 
     fun unenrollStudent(@PathVariable classId: String, @Valid @RequestBody req: UnenrollStudentRequest): ResponseEntity<*> =
             dispatcher.handle(req.toCommandWithClassId(classId)).map { _: Success ->
                 acceptedResponse(classId)
-            }.mapLeft { problem ->
-                when (problem) {
+            }.mapLeft { failure ->
+                when (failure) {
                     is TrainingClassInvariantViolation.UnenrollingNotEnrolledStudent -> unprocessableEntityResponse("Student not enrolled")
                     is AggregateNotFound -> notFoundResponse()
-                    is EventStoreProblem.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
+                    is EventStoreFailure.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
                     else -> serverErrorResponse()
                 }
             }.getOrHandle { errorResponse -> errorResponse }

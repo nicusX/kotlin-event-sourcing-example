@@ -1,6 +1,5 @@
 package eventsourcing.domain
 
-import arrow.core.Either
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

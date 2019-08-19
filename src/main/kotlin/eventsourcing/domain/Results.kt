@@ -1,6 +1,11 @@
 package eventsourcing.domain
 
-// Generic result representing a problem (to avoid using Exceptions)
-interface Problem
+import arrow.core.Either
+
+interface Failure
 
 interface Success
+
+typealias Result<A,B> = Either<A, B>
+
+object AggregateNotFound : Failure

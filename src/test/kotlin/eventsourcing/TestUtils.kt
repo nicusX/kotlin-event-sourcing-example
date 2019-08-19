@@ -1,14 +1,12 @@
 package eventsourcing
 
 import arrow.core.*
-import eventsourcing.domain.AggregateID
 import eventsourcing.domain.AggregateRoot
 import eventsourcing.domain.Event
+import eventsourcing.domain.Result
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
-import org.assertj.core.api.ObjectAssert
 import kotlin.reflect.KClass
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<EventsAssert, Option<Iterable<Event>>>(actual, EventsAssert::class.java) {
 
@@ -71,50 +69,52 @@ internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<Ev
         fun assertThatAggregateUncommitedChanges(aggregate: AggregateRoot?): EventsAssert =
                 EventsAssert(Some(aggregate?.getUncommittedChanges() ?: emptyList()  ))
 
-        fun assertThatEvents(actual: Option<Iterable<Event>>): EventsAssert =
-                EventsAssert(actual)
+        fun assertThatEvents(actual: Option<Iterable<Event>>): EventsAssert = EventsAssert(actual)
+
+        fun assertThatEvents(actual: Iterable<Event>?): EventsAssert = EventsAssert(Option.fromNullable(actual))
     }
 }
 
-internal class EitherAssert<A,B>(actual: Either<A, B>) : AbstractAssert<EitherAssert<A,B>, Either<A, B>>(actual, EitherAssert::class.java) {
+// FIXME rephrase with "success" and "failure"
+internal class ResultAssert<A,B>(actual: Result<A, B>) : AbstractAssert<ResultAssert<A,B>, Result<A, B>>(actual, ResultAssert::class.java) {
 
-    fun isLeft() : EitherAssert<A,B> {
+    fun isFailure() : ResultAssert<A,B> {
         if ( actual.isRight())
             failWithMessage("Expected <Left> but was <%s>", actual)
         return this
     }
 
-    fun isRight() : EitherAssert<A,B> {
+    fun isSuccess() : ResultAssert<A,B> {
         if ( actual.isLeft())
             failWithMessage("Expected <Right> but was <%s>", actual)
         return this
     }
 
-    fun leftIsEqualTo(expected: A) : EitherAssert<A,B> {
+    fun failureIsEqualTo(expected: A) : ResultAssert<A,B> {
         if( expected != actual.swap().getOrElse { null } )
             failWithMessage("Expected <Left(%s)> but was <%s>", expected, actual)
         return this
     }
 
-    inline fun <reified T>leftIsA(): EitherAssert<A,B> {
+    inline fun <reified T>failureIsA(): ResultAssert<A,B> {
         if ( actual.isRight() || actual.getOrElse { null } is T )
-            failWithMessage("Expected <Left<%s>> but was <%s>", T::class.simpleName, typeOfLeft().map { it.simpleName }  )
+            failWithMessage("Expected <Left<%s>> but was <%s>", T::class.simpleName, typeOfFailure().map { it.simpleName }  )
         return this
     }
 
-    fun rightIsEqualTo(expected: B) : EitherAssert<A,B> {
+    fun successIsEqualTo(expected: B) : ResultAssert<A,B> {
         if ( expected != actual.getOrElse { null })
             failWithMessage("Expected <Right(%s)> but was <%s>", expected, actual)
         return this
     }
 
-    inline fun <reified T>rightIsA(): EitherAssert<A,B> {
+    inline fun <reified T>successIsA(): ResultAssert<A,B> {
         if ( actual.isLeft() || actual.swap().getOrElse { null } is T)
-            failWithMessage("Expected <Right<%s>> but was <%s>", T::class.simpleName, typeOfRight().map { it.simpleName }  )
+            failWithMessage("Expected <Right<%s>> but was <%s>", T::class.simpleName, typeOfSuccess().map { it.simpleName }  )
         return this
     }
 
-    private fun typeOfRight(): Option<KClass<*>> {
+    private fun typeOfSuccess(): Option<KClass<*>> {
         val right : Any? = actual.getOrElse { null }
         return when (right) {
             is Any -> Some(right::class)
@@ -122,7 +122,7 @@ internal class EitherAssert<A,B>(actual: Either<A, B>) : AbstractAssert<EitherAs
         }
     }
 
-    private fun typeOfLeft(): Option<KClass<*>> {
+    private fun typeOfFailure(): Option<KClass<*>> {
         val left : Any? = actual.swap().getOrElse { null }
         return when (left) {
             is Any -> Some(left::class)
@@ -130,12 +130,12 @@ internal class EitherAssert<A,B>(actual: Either<A, B>) : AbstractAssert<EitherAs
         }
     }
 
-    fun extractRight(): B? = actual.getOrElse { null }
+    fun extractSuccess(): B? = actual.getOrElse { null }
 
-    fun extractLeft(): A? = actual.swap().getOrElse { null }
+    fun extractFailure(): A? = actual.swap().getOrElse { null }
 
     companion object {
-        fun <A,B> assertThatEither(actual: Either<A, B>) : EitherAssert<A,B> = EitherAssert(actual)
+        fun <A,B> assertThatResult(actual: Result<A, B>) : ResultAssert<A,B> = ResultAssert(actual)
     }
 }
 

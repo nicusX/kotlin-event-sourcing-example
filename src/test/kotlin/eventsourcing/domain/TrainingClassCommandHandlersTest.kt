@@ -4,7 +4,7 @@ import arrow.core.None
 import arrow.core.Right
 import arrow.core.Some
 import com.nhaarman.mockitokotlin2.*
-import eventsourcing.EitherAssert.Companion.assertThatEither
+import eventsourcing.ResultAssert.Companion.assertThatResult
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -13,16 +13,16 @@ import java.time.LocalDate
 internal class TrainingClassCommandHandlersTest {
 
     @Test
-    fun `given a ScheduleNewClass command, when handled, it should save a new Class with a NewClassScheduled uncommited event and return a successful result with the ID of the class`() {
+    fun `given a ScheduleNewClass command, when handled, then it succeeds, saves a new Class with a NewClassScheduled uncommited event and return a successful result with the ID of the class`() {
         val repository = mockEmptyRepository()
         val fut = handleScheduleNewClass(repository)
 
         val command = ScheduleNewClass("class-title", LocalDate.now(), 10)
         val result = fut(command)
 
-        assertThatEither(result)
-                .isRight()
-                .rightIsA<ScheduleNewClassSuccess>()
+        assertThatResult(result)
+                .isSuccess()
+                .successIsA<ScheduleNewClassSuccess>()
 
         verify(repository).save(check {
             assertThat(it).isInstanceOf(TrainingClass::class.java)
@@ -32,7 +32,7 @@ internal class TrainingClassCommandHandlersTest {
 
 
     @Test
-    fun `given a EnrollStudent command, when handled, it should retrieve the class by ID, enroll the student and save it back with the expected version, and return a successful result`() {
+    fun `given an EnrollStudent command, when successfully handled, then it retrieves the class by ID, enroll the student and save it back with the expected version, and return a successful result`() {
         val classId: ClassID = "a-class"
         val clazz = mock<TrainingClass> {
             on { enrollStudent(any()) }.thenAnswer { Right(this.mock) }
@@ -43,7 +43,7 @@ internal class TrainingClassCommandHandlersTest {
         val command = EnrollStudent(classId, "a-student", 43L)
         val result = fut(command)
 
-        assertThatEither(result).isRight()
+        assertThatResult(result).isSuccess()
 
         verify(clazz).enrollStudent(eq("a-student"))
         verify(repository).getById(eq(classId))
@@ -62,7 +62,7 @@ internal class TrainingClassCommandHandlersTest {
         val command = UnenrollStudent(classId, "a-student", "some reasons", 43L)
         val result = fut(command)
 
-        assertThatEither(result).isRight()
+        assertThatResult(result).isSuccess()
 
         verify(clazz).unenrollStudent(eq("a-student"), eq("some reasons"))
         verify(repository).getById(eq(classId))
