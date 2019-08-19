@@ -113,7 +113,7 @@ private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: 
     val new = old.copy(
                 availableSpots = old.availableSpots + 1,
                 students = old.students - student,
-                version = newVersion) ?: throw InconsistentReadModelException
+                version = newVersion)
 
     TrainingClassProjection.log.trace("Removing Student from Class in TrainingClassDetails view. Updating {} -> {}", old, new)
     this.save(classId, new)

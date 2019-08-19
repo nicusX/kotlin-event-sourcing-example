@@ -1,5 +1,8 @@
 package eventsourcing.api
 
+import arrow.core.getOrHandle
+import eventsourcing.domain.AggregateNotFound
+import eventsourcing.domain.EventStoreProblem
 import eventsourcing.domain.RegisterNewStudent
 import eventsourcing.domain.RegisterNewStudentSuccess
 import org.springframework.http.HttpHeaders
@@ -14,9 +17,17 @@ import javax.validation.Valid
 @RestController
 class StudentCommandController(private val dispatcher: CommandDispatcher) {
     @PostMapping("/students/register")
-    fun scheduleNewClass(@Valid @RequestBody req: RegisterNewStudentRequest): ResponseEntity<Any>
-            = acceptedResponse( (dispatcher.handle(req.toCommand()) as RegisterNewStudentSuccess).studentID )
-
+    fun scheduleNewClass(@Valid @RequestBody req: RegisterNewStudentRequest): ResponseEntity<*> =
+            dispatcher.handle(req.toCommand()).map { success ->
+                val studentId = (success as RegisterNewStudentSuccess).studentID
+                acceptedResponse(studentId)
+            }.mapLeft { problem ->
+                when (problem) {
+                    is AggregateNotFound -> notFoundResponse("Aggregate not Found")
+                    is EventStoreProblem.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
+                    else -> serverErrorResponse()
+                }
+            }.getOrHandle { errorResponse -> errorResponse }
 }
 
 data class RegisterNewStudentRequest(
@@ -25,7 +36,7 @@ data class RegisterNewStudentRequest(
     fun toCommand() = RegisterNewStudent(email, fullName)
 }
 
-private fun acceptedResponse(studentId: String) : ResponseEntity<Any> {
+private fun acceptedResponse(studentId: String): ResponseEntity<Any> {
     val headers = HttpHeaders()
     headers.location = StudentReadController.studentResourceLocation(studentId)
     return ResponseEntity(headers, HttpStatus.ACCEPTED)

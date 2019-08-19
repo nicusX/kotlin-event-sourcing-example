@@ -1,14 +1,17 @@
 package eventsourcing.domain
 
-import eventsourcing.api.CommandDispatcher
-import eventsourcing.api.CommandSuccess
+import arrow.core.Either
+import arrow.core.flatMap
 
-data class RegisterNewStudentSuccess(val studentID: StudentID) : CommandSuccess
+data class RegisterNewStudentSuccess(val studentID: StudentID) : Success
 
-// FIXME return Either<Problem,CommandSuccess>
-fun handleRegisterNewStudent(studentRepository: StudentRepository) = { command: RegisterNewStudent ->
-    CommandDispatcher.log.debug("Handling command: {}", command)
-    val student = Student.registerNewStudent(command.email, command.fullName, studentRepository)
-    studentRepository.save(student)
-    RegisterNewStudentSuccess(student.id)
+// TODO May replace chains of map/flatMap with Arrow comprehensions
+
+fun handleRegisterNewStudent(studentRepository: StudentRepository)
+        : (RegisterNewStudent) -> Either<Problem, RegisterNewStudentSuccess> = { command: RegisterNewStudent ->
+    Student.registerNewStudent(command.email, command.fullName, studentRepository)
+            .flatMap { student ->
+                studentRepository.save(student)
+                        .map {RegisterNewStudentSuccess(student.id)  }
+            }
 }

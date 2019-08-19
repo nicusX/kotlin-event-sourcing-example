@@ -1,11 +1,10 @@
 package eventsourcing.api
 
+import arrow.core.Left
+import arrow.core.Right
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.domain.*
-import eventsourcing.domain.EnrollStudentSuccess
-import eventsourcing.domain.ScheduleNewClassSuccess
-import eventsourcing.domain.UnenrollStudentSuccess
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.core.StringEndsWith.endsWith
 import org.junit.jupiter.api.BeforeEach
@@ -36,7 +35,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Schedule New Class endpoint, when command handling succeeds, then it returns 202 ACCEPTED with Class Location header`() {
         whenever(dispatcher.handle(any<ScheduleNewClass>()))
-                .thenReturn(ScheduleNewClassSuccess(aClassId))
+                .thenReturn(Right(ScheduleNewClassSuccess(aClassId)))
 
         val request = ScheduleNewClassRequest("Class Title", LocalDate.now(), 10)
         mvc.perform(post("/classes/schedule_new")
@@ -61,7 +60,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling succeeds, then it returns 202 ACCEPTED with class Location header`() {
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenReturn(EnrollStudentSuccess)
+                .thenReturn(Right(EnrollStudentSuccess))
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -80,7 +79,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails because the Class does not exist, then it returns 404 NOT FOUND`(){
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenAnswer{ throw AggregateNotFoundException() }
+                .thenReturn(Left(AggregateNotFound))
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -91,7 +90,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails because of insufficient spots in the class, then it returns 422 UNPROCESSABLE ENTITY and a JSON body containing the error`() {
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenAnswer{ throw NoAvailableSpotsException(aClassId) }
+                .thenReturn(Left(TrainingClassInvariantViolation.ClassHasNoAvailableSpots))
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +103,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails because the student is already enrolled, then it returns 422 UNPROCESSABLE ENTITY and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenAnswer{ throw StudentAlreadyEnrolledException(studentId, aClassId) }
+                .thenReturn(Left(TrainingClassInvariantViolation.StudentAlreadyEnrolled))
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +116,8 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Enroll Student endpoint, when command handling fails for a concurrency issue, then it returns 409 CONFLICT and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<EnrollStudent>()))
-                .thenAnswer{ throw ConcurrencyException() }
+                .thenReturn(Left(EventStoreProblem.ConcurrentChangeDetected))
+
 
         mvc.perform(post("/classes/$aClassId/enroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -133,7 +133,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Unenroll Student endpoint, when command handling succeeds, then it returns 202 ACCEPTED with class Location header`() {
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenReturn(UnenrollStudentSuccess)
+                .thenReturn(Right(UnenrollStudentSuccess))
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +153,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Unenroll Student endpoint, when command handling fails because the Class does not exist, then it returns 404 NOT FOUND`(){
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenAnswer{ throw AggregateNotFoundException() }
+                .thenReturn(Left(AggregateNotFound))
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -164,7 +164,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given a POST to Unenroll Student endpoint, when command handling fails because the student is not enrolled, then it returns 422 UNPROCESSABLE ENTITY and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenAnswer{ throw StudentNotEnrolledException(studentId, aClassId) }
+                .thenReturn(Left(TrainingClassInvariantViolation.UnenrollingNotEnrolledStudent))
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -177,7 +177,7 @@ internal class TrainingClassCommandControllerIT() {
     @Test
     fun `given POST to Unenroll Student endpoint, when command handling fails for a concurrency issue, then it returns 409 CONFLICT and a JSON body containing the error`(){
         whenever(dispatcher.handle(any<UnenrollStudent>()))
-                .thenAnswer{ throw ConcurrencyException() }
+                .thenReturn(Left(EventStoreProblem.ConcurrentChangeDetected))
 
         mvc.perform(post("/classes/$aClassId/unenroll_student")
                 .contentType(MediaType.APPLICATION_JSON)

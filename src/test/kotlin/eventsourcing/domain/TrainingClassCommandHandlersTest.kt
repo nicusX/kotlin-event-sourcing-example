@@ -1,7 +1,9 @@
 package eventsourcing.domain
 
 import arrow.core.None
+import arrow.core.Right
 import arrow.core.Some
+import arrow.core.getOrElse
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
 import org.assertj.core.api.Assertions.assertThat
@@ -12,13 +14,18 @@ internal class TrainingClassCommandHandlersTest {
 
     @Test
     fun `given a ScheduleNewClass command, when handled, it should save a new Class with a NewClassScheduled uncommited event and return a successful result with the ID of the class`() {
-        val repository = mock<TrainingClassRepository>()
+        val repository = mock<TrainingClassRepository> {
+            on{ save(any(), any()) }.thenReturn(Right(ChangesSuccessfullySaved))
+        }
         val fut = handleScheduleNewClass(repository)
 
         val command = ScheduleNewClass("class-title", LocalDate.now(), 10)
         val result = fut(command)
 
-        assertThat(result.classId).isNotBlank()
+        assertThat(result.isRight()).isTrue()
+
+        val success = result.getOrElse { null }
+        assertThat(success).isInstanceOf(ScheduleNewClassSuccess::class.java)
 
         verify(repository).save(check {
             assertThat(it).isInstanceOf(TrainingClass::class.java)
@@ -30,9 +37,12 @@ internal class TrainingClassCommandHandlersTest {
     @Test
     fun `given a EnrollStudent command, when handled, it should retrieve the class by ID, enroll the student and save it back with the expected version, and return a successful result`() {
         val classId: ClassID = "a-class"
-        val clazz = mock<TrainingClass>()
+        val clazz = mock<TrainingClass> {
+            on{ enrollStudent(any())}.thenAnswer { Right(this.mock) }
+        }
         val repository = mock<TrainingClassRepository> {
             on { getById(any())}.doReturn( Some(clazz) )
+            on { save(any(), any()) }.thenReturn(Right(ChangesSuccessfullySaved))
         }
         val fut = handleEnrollStudent(repository)
 
@@ -49,9 +59,12 @@ internal class TrainingClassCommandHandlersTest {
     @Test
     fun `given an UnenrollStudent command, when handled, it should retrieve the class by ID, unenroll the student and save it back with the expected version, and return a successful result`() {
         val classId: ClassID = "a-class"
-        val clazz = mock<TrainingClass>()
+        val clazz = mock<TrainingClass> {
+            on{ unenrollStudent(any(), any()) }.thenAnswer { Right(this.mock) }
+        }
         val repository = mock<TrainingClassRepository> {
             on { getById(any())}.doReturn( Some(clazz) )
+            on { save(any(), any()) }.thenReturn(Right(ChangesSuccessfullySaved))
         }
         val fut = handleUnenrollStudent(repository)
 

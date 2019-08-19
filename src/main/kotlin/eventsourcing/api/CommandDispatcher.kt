@@ -1,5 +1,6 @@
 package eventsourcing.api
 
+import arrow.core.Either
 import eventsourcing.domain.*
 import eventsourcing.domain.handleEnrollStudent
 import eventsourcing.domain.handleRegisterNewStudent
@@ -16,13 +17,13 @@ import org.slf4j.LoggerFactory
  */
 class CommandDispatcher(private val classRepo: TrainingClassRepository, private val studentRepo : StudentRepository) {
 
-    val scheduleNewClassHandler = handleScheduleNewClass(classRepo)
-    val enrollStudentHandler = handleEnrollStudent(classRepo)
-    val unenrollStudentHandler = handleUnenrollStudent(classRepo)
-    val registerNewStudentHandler = handleRegisterNewStudent(studentRepo)
+    val scheduleNewClassHandler: (ScheduleNewClass) -> Either<Problem, ScheduleNewClassSuccess> = handleScheduleNewClass(classRepo)
+    val enrollStudentHandler: (EnrollStudent) -> Either<Problem, EnrollStudentSuccess> = handleEnrollStudent(classRepo)
+    val unenrollStudentHandler: (UnenrollStudent) -> Either<Problem, UnenrollStudentSuccess> = handleUnenrollStudent(classRepo)
+    val registerNewStudentHandler: (RegisterNewStudent) -> Either<Problem, RegisterNewStudentSuccess> = handleRegisterNewStudent(studentRepo)
 
     // Dispatches
-    fun handle(command: Command) : CommandSuccess {
+    fun handle(command: Command) : Either<Problem, Success> {
         log.debug("Handing command: {}", command)
         return when(command) {
             is ScheduleNewClass -> scheduleNewClassHandler(command)
@@ -39,10 +40,4 @@ class CommandDispatcher(private val classRepo: TrainingClassRepository, private 
     }
 }
 
-interface CommandSuccess
-
 class UnhandledCommandException(command: Command) : Exception("Command ${command::class.simpleName} is not handled")
-
-// FIXME remove this exception
-@Deprecated("To be removed")
-class AggregateNotFoundException() : Exception()

@@ -2,6 +2,8 @@ package eventsourcing.domain
 
 import arrow.core.Either
 import arrow.core.Option
+import arrow.core.Right
+import arrow.core.flatMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.Exception
@@ -10,14 +12,15 @@ abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) 
 
     private val store = eventStore
 
-    override fun save(aggregate: A, expectedVersion: Option<Long>) {
-        log.debug("Storing uncommitted event for '${aggregate.aggregateType()}' id: $aggregate.id")
+    override fun save(aggregate: A, expectedVersion: Option<Long>) : Either<Problem, ChangesSuccessfullySaved> {
+        log.debug("Storing uncommitted event for '${aggregate.aggregateType()}:$aggregate.id'")
         val uncommitedChanges = aggregate.getUncommittedChanges()
 
-        val savedEvents: Either<EventStoreProblem, Iterable<Event>> = store.saveEvents(aggregate.aggregateType(), aggregate.id, uncommitedChanges, expectedVersion)
-        if ( savedEvents.isLeft()) throw ConcurrencyException()
-
-        aggregate.markChangesAsCommitted()
+        return store.saveEvents(aggregate.aggregateType(), aggregate.id, uncommitedChanges, expectedVersion)
+                .flatMap{ _ ->
+                    aggregate.markChangesAsCommitted()
+                    Right(ChangesSuccessfullySaved)
+                }
     }
 
     override fun getById(id: AggregateID): Option<A> {
@@ -34,6 +37,4 @@ abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) 
     }
 }
 
-// FIXME remove this exception
-@Deprecated("To be removed")
-class ConcurrencyException() : Exception()
+object ChangesSuccessfullySaved : Success

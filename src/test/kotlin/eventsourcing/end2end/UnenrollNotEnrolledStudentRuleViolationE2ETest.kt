@@ -7,13 +7,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 internal class UnenrollNotEnrolledStudentRuleViolationE2ETest(@Autowired template : TestRestTemplate) : BaseE2EJourneyTest(template) {
 
     @Test
-    fun `UNAHPPY | Schedule Class + Enroll a Student + Unenroll a different Student and get rejected`()  {
+    fun `UNAHPPY | Register Student + Schedule Class + Enroll a Student + Unenroll a different Student and get rejected`()  {
+        val aStudentURI = registerStudent_withEmailAndFullName_isAccepted("student1@ema.il", "First Student")
+        val aStudent = getStudent_isOk_withVersion(aStudentURI, 0L)
+
         val classURI = scheduleNewClass_withSize_isAccepted(2)
         var expectedClassVersion = 0L
 
-        enrollStudent_isAccepted(classURI, "STUDENT001", expectedClassVersion)
+        enrollStudent_isAccepted(classURI, aStudent.studentId, expectedClassVersion)
         expectedClassVersion++
 
-        unenrollStudent_isRejectedWith422(classURI, "STUDENT999", expectedClassVersion)
+        unenrollStudent_isRejectedWith422(classURI, "ANOTHER-STUDENT-ID", expectedClassVersion)
     }
 }

@@ -1,5 +1,6 @@
 package eventsourcing.api
 
+import arrow.core.Right
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.api.TrainingClassCommandControllerIT.Companion.asJsonString
 import eventsourcing.domain.RegisterNewStudent
@@ -32,7 +33,7 @@ internal class StudentCommandControllerIT() {
     @Test
     fun `given a POST to Register new Student endpoint, when command processing succeeds, then it returns 202 ACCEPTED with Student Location header`() {
         whenever(dispatcher.handle(any<RegisterNewStudent>()))
-                .thenReturn(RegisterNewStudentSuccess(aStudentId))
+                .thenReturn( Right(RegisterNewStudentSuccess(aStudentId)))
 
         val request = RegisterNewStudentRequest("test@ema.il", "Full Name")
         mvc.perform(MockMvcRequestBuilders.post("/students/register")

@@ -1,5 +1,8 @@
 package eventsourcing.domain
 
+import arrow.core.Either
+import arrow.core.Left
+import arrow.core.Right
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -24,27 +27,30 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     // never fail
     // no side-effect
 
-    override fun apply( event: Event) {
-        when (event) {
-            is NewClassScheduled -> apply(event)
-            is StudentEnrolled -> apply(event)
-            is StudentUnenrolled -> apply(event)
-            else -> throw UnsupportedEventException(event::class.java)
-        }
-    }
+    override fun applyEvent(event: Event): TrainingClass =
+            when (event) {
+                is NewClassScheduled -> apply(event)
+                is StudentEnrolled -> apply(event)
+                is StudentUnenrolled -> apply(event)
+                else -> throw UnsupportedEventException(event::class.java)
+            }
 
-    private fun apply( event: StudentEnrolled) {
+
+    private fun apply(event: StudentEnrolled): TrainingClass {
         this.availableSpots--
         this.enrolledStudents.add(event.studentId)
+        return this
     }
 
-    private fun apply( event: StudentUnenrolled) {
+    private fun apply(event: StudentUnenrolled): TrainingClass {
         this.availableSpots++
         this.enrolledStudents.remove(event.studentId)
+        return this
     }
 
-    private fun apply( event: NewClassScheduled) {
+    private fun apply(event: NewClassScheduled): TrainingClass {
         this.availableSpots = event.classSize
+        return this
     }
 
     // Behaviours
@@ -52,50 +58,42 @@ class TrainingClass(id: ClassID) : AggregateRoot(id) {
     // 2. (if successful) apply changes and queue the new event
     // may have side-effects
 
-    fun enrollStudent(studentId: StudentID) : TrainingClass {
+    fun enrollStudent(studentId: StudentID): Either<TrainingClassInvariantViolation, TrainingClass> {
         log.debug("Enrolling student {} to class {}", studentId, this.id)
-        if ( this.enrolledStudents.contains(studentId))
-            throw StudentAlreadyEnrolledException(studentId, this.id)
-
-        if ( this.availableSpots < 1 )
-            throw NoAvailableSpotsException(this.id)
-
-        applyChangeAndQueueEvent(StudentEnrolled(this.id, studentId))
-        return this
-    }
-
-    fun unenrollStudent(studentId: StudentID, reason: String) : TrainingClass {
-        log.debug("Enrolling student {} from class {}. Reason: '{}'", studentId, this.id, reason)
-        if (!this.enrolledStudents.contains(studentId))
-            throw StudentNotEnrolledException(this.id, studentId)
-
-        applyChangeAndQueueEvent(StudentUnenrolled(this.id, studentId, reason))
-        return this
-    }
-
-    companion object  {
-        fun scheduleNewClass (title: String, date: LocalDate, size: Int) : TrainingClass  {
-            if ( size <= 0) throw InvalidClassSizeException()
-
-            val classId = UUID.randomUUID().toString()
-            val trainingClass = TrainingClass(classId)
-            trainingClass.applyChangeAndQueueEvent(NewClassScheduled(classId, title, date, size))
-            return trainingClass
+        return when {
+            this.enrolledStudents.contains(studentId) -> Left(TrainingClassInvariantViolation.StudentAlreadyEnrolled)
+            this.availableSpots < 1 -> Left(TrainingClassInvariantViolation.ClassHasNoAvailableSpots)
+            else -> Right(applyAndQueueEvent(StudentEnrolled(this.id, studentId)))
         }
+    }
 
-        val log : Logger = LoggerFactory.getLogger(TrainingClass::class.java)
+    fun unenrollStudent(studentId: StudentID, reason: String): Either<TrainingClassInvariantViolation, TrainingClass> {
+        log.debug("Enrolling student {} from class {}. Reason: '{}'", studentId, this.id, reason)
+        return when {
+            !this.enrolledStudents.contains(studentId) -> Left(TrainingClassInvariantViolation.UnenrollingNotEnrolledStudent)
+            else -> Right(applyAndQueueEvent(StudentUnenrolled(this.id, studentId, reason)))
+        }
+    }
+
+    companion object {
+        fun scheduleNewClass(title: String, date: LocalDate, size: Int): Either<TrainingClassInvariantViolation, TrainingClass> =
+                when {
+                    size <= 0 -> Left(TrainingClassInvariantViolation.InvalidClassSize)
+                    else -> {
+                        val classId = UUID.randomUUID().toString()
+                        Right(TrainingClass(classId)
+                                .applyAndQueueEvent(NewClassScheduled(classId, title, date, size)))
+
+                    }
+                }
+
+        val log: Logger = LoggerFactory.getLogger(TrainingClass::class.java)
     }
 }
 
-
-class StudentAlreadyEnrolledException(studentId: StudentID, classId: ClassID)
-    : Exception("Student $studentId is already enrolled to class $classId")
-
-class StudentNotEnrolledException(studentId: StudentID, classId: ClassID)
-    : Exception("Student $studentId is not enrolled to class $classId")
-
-class NoAvailableSpotsException(classId: ClassID)
-    : Exception("Class $classId has no available spots")
-
-class InvalidClassSizeException()
-    : Exception("Class must have size > 0")
+sealed class TrainingClassInvariantViolation : Problem {
+    object StudentAlreadyEnrolled : TrainingClassInvariantViolation()
+    object UnenrollingNotEnrolledStudent : TrainingClassInvariantViolation()
+    object ClassHasNoAvailableSpots : TrainingClassInvariantViolation()
+    object InvalidClassSize : TrainingClassInvariantViolation()
+}

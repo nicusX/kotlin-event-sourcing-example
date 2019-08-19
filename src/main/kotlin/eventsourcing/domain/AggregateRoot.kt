@@ -1,5 +1,6 @@
 package eventsourcing.domain
 
+import arrow.core.Either
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -14,40 +15,35 @@ abstract class AggregateRoot(val id: AggregateID) {
 
     private val uncommittedChanges = ArrayList<Event>()
 
-    fun getUncommittedChanges() : Iterable<Event> = uncommittedChanges.toList().asIterable()
+    fun getUncommittedChanges(): Iterable<Event> = uncommittedChanges.toList().asIterable()
 
     fun markChangesAsCommitted() {
         log.debug("Marking all changes as committed")
         uncommittedChanges.clear()
     }
 
-    protected fun applyChangeAndQueueEvent(event : Event) {
-        applyChange(event)
-
+    protected fun <A: AggregateRoot> applyAndQueueEvent(event: Event): A {
+        applyEvent(event)
         log.debug("Appending event {} to uncommitted changes", event)
         uncommittedChanges.add(event)
+        return this as A
     }
 
-    private fun applyChange(event : Event) {
-        log.debug("Applying event: {}", event)
-        apply(event)
-    }
 
-    protected abstract fun apply( event: Event )
+    protected abstract fun applyEvent(event: Event): AggregateRoot
 
-    class UnsupportedEventException(eventClass: Class<out Event> )
+    class UnsupportedEventException(eventClass: Class<out Event>)
         : Exception("Unsupported event ${eventClass.canonicalName}")
 
     companion object {
-        val log : Logger = LoggerFactory.getLogger(AggregateRoot::class.java)
+        val log: Logger = LoggerFactory.getLogger(AggregateRoot::class.java)
 
-        fun <A : AggregateRoot> loadFromHistory(aggregate: A,  history: Iterable<Event>) : A  {
+        fun <A: AggregateRoot> loadFromHistory(aggregate: A, history: Iterable<Event>): A {
             log.debug("Reloading aggregate {} state from history", aggregate)
-            for(event: Event in history) {
-                aggregate.applyChange(event)
+            for (event: Event in history) {
+                aggregate.applyEvent(event)
             }
             return aggregate
         }
     }
 }
-

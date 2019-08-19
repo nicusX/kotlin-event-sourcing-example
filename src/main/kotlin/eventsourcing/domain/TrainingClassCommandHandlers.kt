@@ -1,41 +1,39 @@
 package eventsourcing.domain
 
-import arrow.core.Some
-import arrow.core.getOrElse
-import eventsourcing.api.AggregateNotFoundException
-import eventsourcing.api.CommandSuccess
+import arrow.core.*
 
-data class ScheduleNewClassSuccess(val classId: ClassID) : CommandSuccess
+// TODO May replace chains of map/flatMap with Arrow comprehensions
 
-// FIXME return Either<Problem,CommandSuccess>
-fun handleScheduleNewClass(classRepository: TrainingClassRepository) = { command: ScheduleNewClass ->
-    val clazz = TrainingClass.scheduleNewClass(command.title, command.date, command.size)
-    classRepository.save(clazz)
-    ScheduleNewClassSuccess(clazz.id)
+fun handleScheduleNewClass(classRepository: TrainingClassRepository)
+        : (ScheduleNewClass) -> Either<Problem, ScheduleNewClassSuccess> = { command: ScheduleNewClass ->
+    TrainingClass.scheduleNewClass(command.title, command.date, command.size)
+            .flatMap { clazz ->
+                classRepository.save(clazz)
+                        .map { ScheduleNewClassSuccess(clazz.id)}
+            }
 }
 
-
-object EnrollStudentSuccess : CommandSuccess
-
-// FIXME return Either<Problem,CommandSuccess>
-fun handleEnrollStudent(classRepository: TrainingClassRepository) = { command: EnrollStudent ->
+fun handleEnrollStudent(classRepository: TrainingClassRepository)
+        : (EnrollStudent) -> Either<Problem, EnrollStudentSuccess> = { command: EnrollStudent ->
     classRepository.getById(command.classId)
-            .map { clazz ->
-                clazz.enrollStudent(command.studentId)
-                classRepository.save(clazz, Some(command.originalVersion))
-                EnrollStudentSuccess
-            }.getOrElse { throw AggregateNotFoundException() }
+            .toEither { AggregateNotFound }
+            .flatMap { clazz -> clazz.enrollStudent(command.studentId)}
+            .flatMap { clazz ->  classRepository.save(clazz, Some(command.originalVersion))}
+            .map { EnrollStudentSuccess }
 }
 
 
-object UnenrollStudentSuccess : CommandSuccess
-
-// FIXME return Either<Problem,CommandSuccess>
-fun handleUnenrollStudent(classRepository: TrainingClassRepository)  = { command : UnenrollStudent ->
+fun handleUnenrollStudent(classRepository: TrainingClassRepository)
+        : (UnenrollStudent) -> Either<Problem, UnenrollStudentSuccess> = { command : UnenrollStudent ->
     classRepository.getById(command.classId)
-            .map { clazz ->
-                clazz.unenrollStudent(command.studentId, command.reason)
-                classRepository.save(clazz, Some(command.originalVersion))
-                UnenrollStudentSuccess
-            }.getOrElse { throw AggregateNotFoundException() }
+            .toEither { AggregateNotFound }
+            .flatMap { clazz ->  clazz.unenrollStudent(command.studentId, command.reason)}
+            .flatMap { clazz ->  classRepository.save(clazz, Some(command.originalVersion))}
+            .map { UnenrollStudentSuccess }
 }
+
+data class ScheduleNewClassSuccess(val classId: ClassID) : Success
+
+object EnrollStudentSuccess : Success
+
+object UnenrollStudentSuccess : Success

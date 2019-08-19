@@ -1,9 +1,10 @@
 package eventsourcing.domain
 
+import arrow.core.getOrElse
 import com.nhaarman.mockitokotlin2.*
 import eventsourcing.EventsAssert.Companion.assertThatAggregateUncommitedChanges
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 internal class StudentTest {
 
@@ -15,8 +16,10 @@ internal class StudentTest {
         val sut = Student.Companion
 
         val email = "test@ema.il"
-        val newStudent = sut.registerNewStudent(email, "John Doe", repository)
+        val result = sut.registerNewStudent(email, "John Doe", repository)
 
+        assertThat(result.isRight()).isTrue()
+        val newStudent = result.getOrElse { null }!!
         assertThatAggregateUncommitedChanges(newStudent)
                 .onlyContainsAnEventOfType(NewStudentRegistered::class.java)
 
@@ -32,10 +35,11 @@ internal class StudentTest {
         val sut = Student.Companion
 
         val email = "test@ema.il"
+        val result = sut.registerNewStudent(email, "John Doe", repository)
 
-        assertThrows<DuplicateEmailException> {
-            sut.registerNewStudent(email, "John Doe", repository)
-        }
+        assertThat(result.isLeft())
+        assertThat(result.swap().getOrElse { null }).isEqualTo(StudentInvariantViolation.EmailAlreadyInUse)
+
 
         verify(repository).getByEmail(eq(email))
     }
