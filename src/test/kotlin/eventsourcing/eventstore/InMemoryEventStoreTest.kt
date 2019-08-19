@@ -33,7 +33,7 @@ internal class InMemoryEventStoreTest {
                 StudentEnrolled(AN_AGGREGATE_ID, "student-3", 2)
         )
         assertThatEvents(extractedEvents)
-                .isNotEmpty()
+                .isDefined()
                 .onlyContainsInOrder(expectedVersionedEvents)
     }
 
@@ -104,7 +104,7 @@ internal class InMemoryEventStoreTest {
         )
 
         assertThatEvents(extractedEvents)
-                .isNotEmpty()
+                .isDefined()
                 .onlyContainsInOrder(expectedVersionedEvents)
     }
 
@@ -119,7 +119,7 @@ internal class InMemoryEventStoreTest {
 
         val nonExistingAggregateID = "this-id-does-not-exist"
         val events : Option<Iterable<Event>> = sut.getEventsForAggregate(AGGREGATE_TYPE, nonExistingAggregateID)
-        assertThatEvents(events).isEmpty()
+        assertThatEvents(events).isNone()
     }
 
     @Test

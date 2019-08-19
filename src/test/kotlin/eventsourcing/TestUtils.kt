@@ -1,28 +1,34 @@
 package eventsourcing
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
-import arrow.core.getOrElse
+import arrow.core.*
 import eventsourcing.domain.AggregateID
 import eventsourcing.domain.AggregateRoot
 import eventsourcing.domain.Event
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.ObjectAssert
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<EventsAssert, Option<Iterable<Event>>>(actual, EventsAssert::class.java) {
 
     private fun Option<Iterable<Event>>.safeExtract() : Iterable<Event> =
             this.getOrElse { emptyList() }
 
-    fun isNotEmpty() : EventsAssert {
-        Assertions.assertThat(actual).isInstanceOf(Some::class.java)
+    fun isDefined() : EventsAssert {
+        if ( actual is None )
+            failWithMessage("Expected Some<Iterable<Event>> but was <None>")
         return this
     }
 
-    fun isEmpty() : EventsAssert {
-        Assertions.assertThat(actual).isEqualTo(None)
+    fun isNone() : EventsAssert {
+        if ( actual is Some<*>)
+            failWithMessage("Expected None but was %s", actual)
+        return this
+    }
+
+    fun containsNoEvent(): EventsAssert {
+        Assertions.assertThat(actual.safeExtract()).isEmpty()
         return this
     }
 
@@ -62,16 +68,99 @@ internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<Ev
 
 
     companion object {
-        fun assertThatAggregateUncommitedChanges(aggregate: AggregateRoot): EventsAssert =
-                EventsAssert(Some(aggregate.getUncommittedChanges()))
+        fun assertThatAggregateUncommitedChanges(aggregate: AggregateRoot?): EventsAssert =
+                EventsAssert(Some(aggregate?.getUncommittedChanges() ?: emptyList()  ))
 
         fun assertThatEvents(actual: Option<Iterable<Event>>): EventsAssert =
                 EventsAssert(actual)
     }
 }
 
-internal fun <A : AggregateRoot> given(init: () -> A): Pair<A, AggregateID> {
-    val agg = init()
-    agg.markChangesAsCommitted()
-    return Pair(agg, agg.id)
+internal class EitherAssert<A,B>(actual: Either<A, B>) : AbstractAssert<EitherAssert<A,B>, Either<A, B>>(actual, EitherAssert::class.java) {
+
+    fun isLeft() : EitherAssert<A,B> {
+        if ( actual.isRight())
+            failWithMessage("Expected <Left> but was <%s>", actual)
+        return this
+    }
+
+    fun isRight() : EitherAssert<A,B> {
+        if ( actual.isLeft())
+            failWithMessage("Expected <Right> but was <%s>", actual)
+        return this
+    }
+
+    fun leftIsEqualTo(expected: A) : EitherAssert<A,B> {
+        if( expected != actual.swap().getOrElse { null } )
+            failWithMessage("Expected <Left(%s)> but was <%s>", expected, actual)
+        return this
+    }
+
+    inline fun <reified T>leftIsA(): EitherAssert<A,B> {
+        if ( actual.isRight() || actual.getOrElse { null } is T )
+            failWithMessage("Expected <Left<%s>> but was <%s>", T::class.simpleName, typeOfLeft().map { it.simpleName }  )
+        return this
+    }
+
+    fun rightIsEqualTo(expected: B) : EitherAssert<A,B> {
+        if ( expected != actual.getOrElse { null })
+            failWithMessage("Expected <Right(%s)> but was <%s>", expected, actual)
+        return this
+    }
+
+    inline fun <reified T>rightIsA(): EitherAssert<A,B> {
+        if ( actual.isLeft() || actual.swap().getOrElse { null } is T)
+            failWithMessage("Expected <Right<%s>> but was <%s>", T::class.simpleName, typeOfRight().map { it.simpleName }  )
+        return this
+    }
+
+    private fun typeOfRight(): Option<KClass<*>> {
+        val right : Any? = actual.getOrElse { null }
+        return when (right) {
+            is Any -> Some(right::class)
+            else -> None
+        }
+    }
+
+    private fun typeOfLeft(): Option<KClass<*>> {
+        val left : Any? = actual.swap().getOrElse { null }
+        return when (left) {
+            is Any -> Some(left::class)
+            else -> None
+        }
+    }
+
+    fun extractRight(): B? = actual.getOrElse { null }
+
+    fun extractLeft(): A? = actual.swap().getOrElse { null }
+
+    companion object {
+        fun <A,B> assertThatEither(actual: Either<A, B>) : EitherAssert<A,B> = EitherAssert(actual)
+    }
 }
+
+internal class OptionAssert<A>(actual: Option<A>): AbstractAssert<OptionAssert<A>, Option<A>>(actual, OptionAssert::class.java) {
+
+    fun isEmpty(): OptionAssert<A> {
+        if ( actual.isDefined()) failWithMessage("Expected <None> but was <%s>", actual)
+        return this
+    }
+
+    fun isDefined(): OptionAssert<A> {
+        if ( actual.isEmpty()) failWithMessage("Expected <Some(*)> but was <%s>", actual)
+        return this
+    }
+
+    fun extract(): A? = actual.getOrElse { null }
+
+    fun contains(expected: A): OptionAssert<A> {
+        if( expected != actual.getOrElse { null }) failWithMessage("Expected <Some(%s)> but was <%s>", expected, actual)
+        return this
+    }
+
+    companion object {
+        fun <A> assertThatOption(actual: Option<A>) : OptionAssert<A> = OptionAssert(actual)
+    }
+}
+
+

@@ -1,13 +1,13 @@
 package eventsourcing.domain
 
-import java.util.*
+import arrow.core.None
+import arrow.core.Option
 
 class StudentRepository(eventStore: EventStore): EventSourcedRepository<Student>(eventStore) {
     override fun new(id: AggregateID): Student = Student(id)
 
-    // TODO move to a Service using a Read Model
-    fun getByEmail(email: String) : Student? {
+    fun getByEmail(email: String) : Option<Student> {
         // TODO implement (requires maintaining a specialised read-model) + Add test
-        return null
+        return None
     }
 }
