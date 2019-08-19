@@ -10,12 +10,12 @@ import org.slf4j.LoggerFactory
  * This class is doing nothing more than wiring up all command handlers and their dependencies, to be injected
  * into command controllers
  */
-class CommandDispatcher(private val classRepo: TrainingClassRepository, private val studentRepo : StudentRepository) {
+class CommandDispatcher(private val classRepo: TrainingClassRepository, private val studentRepo : StudentRepository, private val registeredEmailsIndex: RegisteredEmailsIndex) {
 
     val scheduleNewClassHandler: (ScheduleNewClass) -> Result<Failure, ScheduleNewClassSuccess> = handleScheduleNewClass(classRepo)
     val enrollStudentHandler: (EnrollStudent) -> Result<Failure, EnrollStudentSuccess> = handleEnrollStudent(classRepo)
     val unenrollStudentHandler: (UnenrollStudent) -> Result<Failure, UnenrollStudentSuccess> = handleUnenrollStudent(classRepo)
-    val registerNewStudentHandler: (RegisterNewStudent) -> Result<Failure, RegisterNewStudentSuccess> = handleRegisterNewStudent(studentRepo)
+    val registerNewStudentHandler: (RegisterNewStudent) -> Result<Failure, RegisterNewStudentSuccess> = handleRegisterNewStudent(studentRepo, registeredEmailsIndex)
 
     // Dispatches
     fun handle(command: Command) : Result<Failure, Success> {

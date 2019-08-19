@@ -30,19 +30,17 @@ class Student(id: StudentID) : AggregateRoot(id) {
     }
 
     companion object {
-        fun registerNewStudent(email: EMail, fullname: String, repository: StudentRepository): Result<StudentInvariantViolation, Student> =
+        fun registerNewStudent(email: EMail, fullname: String, repository: StudentRepository, registeredEmailsIndex: RegisteredEmailsIndex): Result<StudentInvariantViolation, Student> =
                 when {
-                    repository.emailAlreadyInUse(email) -> Left(StudentInvariantViolation.EmailAlreadyInUse)
+                    // This is an example of an invariant across multiple aggregates.
+                    // In a distributed system it should be something more complex than this, to guarantee uniqueness across multiple nodes.
+                    registeredEmailsIndex.isEmailAlreadyInUse(email) -> Left(StudentInvariantViolation.EmailAlreadyInUse)
                     else -> {
                         val studentId = UUID.randomUUID().toString()
                         val student = Student(studentId)
                         Right(student.applyAndQueueEvent(NewStudentRegistered(studentId, email, fullname)))
                     }
                 }
-
-
-        // TODO use a Service querying a specialised Read Model containing emails only
-        private fun StudentRepository.emailAlreadyInUse(email: EMail): Boolean = this.getByEmail(email).isDefined()
 
         val log: Logger = LoggerFactory.getLogger(Student::class.java)
     }

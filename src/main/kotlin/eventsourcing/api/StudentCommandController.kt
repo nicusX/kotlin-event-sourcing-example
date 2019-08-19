@@ -1,10 +1,7 @@
 package eventsourcing.api
 
 import arrow.core.getOrHandle
-import eventsourcing.domain.AggregateNotFound
-import eventsourcing.domain.EventStoreFailure
-import eventsourcing.domain.RegisterNewStudent
-import eventsourcing.domain.RegisterNewStudentSuccess
+import eventsourcing.domain.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,12 +14,13 @@ import javax.validation.Valid
 @RestController
 class StudentCommandController(private val dispatcher: CommandDispatcher) {
     @PostMapping("/students/register")
-    fun scheduleNewClass(@Valid @RequestBody req: RegisterNewStudentRequest): ResponseEntity<*> =
+    fun registerNewStudent(@Valid @RequestBody req: RegisterNewStudentRequest): ResponseEntity<*> =
             dispatcher.handle(req.toCommand()).map { success ->
                 val studentId = (success as RegisterNewStudentSuccess).studentID
                 acceptedResponse(studentId)
             }.mapLeft { failure ->
                 when (failure) {
+                    is StudentInvariantViolation.EmailAlreadyInUse -> unprocessableEntityResponse("Duplicate email")
                     is AggregateNotFound -> notFoundResponse("Aggregate not Found")
                     is EventStoreFailure.ConcurrentChangeDetected -> conflictResponse("Concurrent change detected")
                     else -> serverErrorResponse()

@@ -39,17 +39,26 @@ newly registered Student.
 
 ## The implementation
 
-Both the Event Store and all datastores backing Read Models are in-memory.
-
-The "message bus" publishing Events to all Event Handlers (only Projections here) is in-memory, but asynchronous.
-
-The Query side of the system is updated asynchronously and only eventually consistent with the state of the aggregates. 
-As it is in real, distributed CQRS system. Though, in this case, latency is negligible (it is possible to simulate an higher latency).
+## The "C"-side
 
 The Write model supports a form of optimistic consistency to protect from concurrent changes to an Aggregate.
 Read Models provide the version of Aggregates and Commands contain the version of Aggregate they are expected to be applied to.
 
 The Write side of the system is completely synchronous and blocking.
+
+The Event Store is in-memory.
+
+## The "Q"-side
+
+There are multiple, independent read models. They are running in-process but they are designed as if they where in separate
+applications. The only dependency to the Domain are the Events: for simplicity, they are not serialised when sent through
+the message bus.
+
+The message bus is in-memory, byt asynchronous.
+Read models are updated asynchronously and only eventually consistent with the state of the aggregates on the Write side. 
+As it is in real, distributed CQRS system. Though, in this case, latency is negligible (it is possible to simulate an higher latency).
+
+"Datastores" backing all read models are in-memory.
 
 ### Why Arrow?
 

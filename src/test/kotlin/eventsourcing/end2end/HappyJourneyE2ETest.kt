@@ -11,10 +11,10 @@ internal class HappyJourneyE2ETest(@Autowired template : TestRestTemplate) : Bas
 
         val nOfStudents = listStudents_isOk()
 
-        val aStudentURI = registerStudent_withEmailAndFullName_isAccepted("student1@ema.il", "First Student")
+        val aStudentURI = registerStudent_withEmail_isAccepted("student1@ema.il")
         val aStudent = getStudent_isOk_withVersion(aStudentURI, 0L)
 
-        val anotherStudentURI = registerStudent_withEmailAndFullName_isAccepted("student2@ema.il", "Second Student")
+        val anotherStudentURI = registerStudent_withEmail_isAccepted("student2@ema.il")
         val anotherStudent = getStudent_isOk_withVersion(anotherStudentURI, 0L)
 
         listStudents_isOk_withNofStudents(nOfStudents + 2)

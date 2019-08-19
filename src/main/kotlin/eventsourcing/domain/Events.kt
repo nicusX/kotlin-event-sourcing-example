@@ -5,7 +5,6 @@ import java.time.LocalDate
 
 abstract class Event(private val version: Long?) : Message() {
     val eventTime =  Instant.now() // It would be better to inject a clock, but we have no logic to test around eventTime
-    // TODO add event timestamp
     fun version(): Long? = version  // The version is assigned only then the Event is stored in the EventStore
                                     // There are effectively two types of Events: before and after they are stored in the Event Store.
     abstract fun copyWithVersion(version: Long): Event
@@ -18,7 +17,6 @@ data class NewClassScheduled (
         val classSize: Int,
         val version: Long? = null) : Event(version) {
 
-    // TODO any better way than reimplementing in all subclasses?
     override fun copyWithVersion(version: Long): NewClassScheduled =
             this.copy(version = version)
 }

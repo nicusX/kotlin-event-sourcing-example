@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.annotation.DirtiesContext
 import java.net.URI
 import java.time.LocalDate
+import org.apache.commons.lang3.RandomStringUtils
 
 @DirtiesContext // E2E tests change the state of event-store and read-models
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,13 +59,21 @@ internal abstract class BaseE2EJourneyTest(val template: TestRestTemplate) {
         return size
     }
 
-    protected fun registerStudent_withEmailAndFullName_isAccepted(email: String, fullName: String): URI =
+    protected fun registerStudent_withEmail_isAccepted(email: String): URI =
             template.assertThatApiPost<Any, RegisterNewStudentRequest>("/students/register",
                     RegisterNewStudentRequest(
                             email = email,
-                            fullName = fullName))
+                            fullName = RandomStringUtils.randomAlphabetic(10, 20)))
                     .returnsStatusCode(HttpStatus.ACCEPTED)
                     .extractLocation()
+
+    protected fun registerStudent_withEmail_isRejectedWith422(email: String) {
+        template.assertThatApiPost<Any, RegisterNewStudentRequest>("/students/register",
+                RegisterNewStudentRequest(
+                        email = email,
+                        fullName = RandomStringUtils.randomAlphabetic(10, 20)))
+                .returnsStatusCode(HttpStatus.UNPROCESSABLE_ENTITY)
+    }
 
     protected fun scheduleNewClass_withSize_isAccepted(size: Int): URI =
             template.assertThatApiPost<Any, ScheduleNewClassRequest>("/classes/schedule_new",

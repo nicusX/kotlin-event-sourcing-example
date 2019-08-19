@@ -8,7 +8,7 @@ internal class UnenrollNotEnrolledStudentRuleViolationE2ETest(@Autowired templat
 
     @Test
     fun `UNAHPPY | Register Student + Schedule Class + Enroll a Student + Unenroll a different Student and get rejected`()  {
-        val aStudentURI = registerStudent_withEmailAndFullName_isAccepted("student1@ema.il", "First Student")
+        val aStudentURI = registerStudent_withEmail_isAccepted("student1@ema.il")
         val aStudent = getStudent_isOk_withVersion(aStudentURI, 0L)
 
         val classURI = scheduleNewClass_withSize_isAccepted(2)

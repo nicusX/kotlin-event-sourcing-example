@@ -27,10 +27,9 @@ internal class StudentDetailsProjectionTest {
         })
         verifyNoMoreInteractions(store)
     }
+}
 
-
-    private fun givenProjectionAndStore(): Pair<StudentDetailsProjection, DocumentStore<StudentDetails>> {
-        val datastore = mock<DocumentStore<StudentDetails>>()
-        return Pair(StudentDetailsProjection(datastore), datastore)
-    }
+private fun givenProjectionAndStore(): Pair<StudentDetailsProjection, DocumentStore<StudentDetails>> {
+    val datastore = mock<DocumentStore<StudentDetails>>()
+    return Pair(StudentDetailsProjection(datastore), datastore)
 }

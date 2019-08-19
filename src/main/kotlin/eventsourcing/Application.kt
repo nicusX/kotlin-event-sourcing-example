@@ -38,17 +38,20 @@ class KotlinBootApplication {
     private val trainingClassProjection = TrainingClassProjection(trainingClassDetailsStore, trainingClassListStore, studentsContactsStore)
     private val trainingClassReadModel = TrainingClassReadModel(trainingClassDetailsStore, trainingClassListStore)
 
+    private val registeredEmailIndex = RegisteredEmailsIndex(InMemoryIndex<EMail>())
+
     // Event Bus
     private val eventBus : EventPublisher<Event> = AsyncInMemoryBus(GlobalScope)
             .register(studentDetailsProjection)
             .register(studentListProjection)
             .register(trainingClassProjection)
+            .register(registeredEmailIndex)
 
     // Event Store and Event-Sourced Repositories
     private val eventStore : EventStore = InMemoryEventStore(eventBus)
     private val classRepository = TrainingClassRepository(eventStore)
     private val studentRepository = StudentRepository(eventStore)
-    private val commandDispatcher : CommandDispatcher = CommandDispatcher(classRepository, studentRepository)
+    private val commandDispatcher : CommandDispatcher = CommandDispatcher(classRepository, studentRepository, registeredEmailIndex)
 
     // These Beans are injected in the MVC Controllers
     @Bean fun studentDetailsReadModelFacade() = studentDetailsReadModelFacade

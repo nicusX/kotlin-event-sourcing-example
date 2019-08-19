@@ -75,7 +75,6 @@ internal class EventsAssert(actual: Option<Iterable<Event>>) : AbstractAssert<Ev
     }
 }
 
-// FIXME rephrase with "success" and "failure"
 internal class ResultAssert<A,B>(actual: Result<A, B>) : AbstractAssert<ResultAssert<A,B>, Result<A, B>>(actual, ResultAssert::class.java) {
 
     fun isFailure() : ResultAssert<A,B> {
