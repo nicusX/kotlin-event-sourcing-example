@@ -4,10 +4,13 @@
 
 This project is for demonstration purposes.
 
-It implements a simple Event-Sourcing system, based on [Greg Young's SimpleCQRS](https://github.com/gregoryyoung/m-r).
+It demonstrate a classing Event-Sourcing system and it is loosely based on [Greg Young's SimpleCQRS](https://github.com/gregoryyoung/m-r),
+but with a different domain and additional features.
 
-Differently from the original example, this is in Kotlin. 
-More importantly it uses a different domain with some additional features to make it slightly more realistic.
+Differently from Greg Young's SimpleCQRS, the implementation is a bit more *functional* (still not purely functional),
+avoiding for example to use Exceptions as signals for expected conditions.
+And it is obviously written in Kotlin :)
+
 
 ## The Domain
 
@@ -46,11 +49,16 @@ As it is in real, distributed CQRS system. Though, in this case, latency is negl
 The Write model supports a form of optimistic consistency to protect from concurrent changes to an Aggregate.
 Read Models provide the version of Aggregates and Commands contain the version of Aggregate they are expected to be applied to.
 
-The design follows a classic DDD, very OOP and not much functional, style.
-Exceptions are used as signal for expected conditions, like a business rule violation.
-There is room of improvement here, but it would require introducing some functional library like [Arrow](https://arrow-kt.io).
-
 The Write side of the system is completely synchronous and blocking.
+
+### Why Arrow?
+
+[Arrow](https://arrow-kt.io) Kotlin functional library is used only for 
+[`Either`](https://arrow-kt.io/docs/apidocs/arrow-core-data/arrow.core/-either/index.html), 
+[`Option`](https://arrow-kt.io/docs/apidocs/arrow-core-data/arrow.core/-option/index.html) and few other bits, to allow
+nicer patterns compared to Kotlin native constructs.
+
+The code is not purely functional.
 
 ### Why SpringBoot?
 
