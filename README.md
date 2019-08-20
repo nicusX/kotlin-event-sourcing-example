@@ -39,6 +39,8 @@ newly registered Student.
 
 ## The implementation
 
+![Architecture of the system](./diagram.png)
+
 ## The "C"-side
 
 The Write model supports a form of optimistic consistency to protect from concurrent changes to an Aggregate.
