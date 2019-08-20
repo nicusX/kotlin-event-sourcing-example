@@ -2,6 +2,8 @@ package eventsourcing.readmodels
 
 import arrow.core.Option
 
+// Different datastores backing read models
+
 /**
  * A generic, basic document store
  * containing a single type of document

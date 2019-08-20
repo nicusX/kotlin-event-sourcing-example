@@ -71,7 +71,7 @@ internal class TrainingClassCommandControllerIT() {
         verify(dispatcher).handle(check<EnrollStudent>{
             assertThat(it.classId).isEqualTo(aClassId)
             assertThat(it.studentId).isEqualTo(enrollStudentRequest.studentId)
-            assertThat(it.originalVersion).isEqualTo(enrollStudentRequest.classVersion)
+            assertThat(it.expectedVersion).isEqualTo(enrollStudentRequest.classVersion)
         })
         verifyNoMoreInteractions(dispatcher)
     }
@@ -144,7 +144,7 @@ internal class TrainingClassCommandControllerIT() {
         verify(dispatcher).handle(check<UnenrollStudent>{
             assertThat(it.classId).isEqualTo(aClassId)
             assertThat(it.studentId).isEqualTo(unenrollStudentRequest.studentId)
-            assertThat(it.originalVersion).isEqualTo(unenrollStudentRequest.classVersion)
+            assertThat(it.expectedVersion).isEqualTo(unenrollStudentRequest.classVersion)
         })
         verifyNoMoreInteractions(dispatcher)
 

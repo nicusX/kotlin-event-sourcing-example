@@ -4,8 +4,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
- * Auxiliary read model, to identify whether an email is already in use.
- * It is both a Projection (handling NewStudentRegistered events) and a Read Model.
+ * Service using an auxiliary read model, to check whether an email is already in use
+ *
+ * This is an all-in-one: Service, underlying Read Model and Projection (handling NewStudentRegistered events)
+
  */
 class RegisteredEmailsIndex(private val emailIndex: Index<EMail>) : Handles<Event> {
 

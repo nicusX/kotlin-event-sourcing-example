@@ -41,5 +41,5 @@ class StudentDetailsProjection(private val studentDetailsStore: DocumentStore<St
  * External, read-only facade for the read model
  */
 class StudentDetailsReadModel(private val studentDetailsStore: DocumentStore<StudentDetails>) {
-    fun getStudentById(studentId: String) : Option<StudentDetails> = studentDetailsStore.get(studentId)
+    fun getStudentById(studentId: String): Option<StudentDetails> = studentDetailsStore.get(studentId)
 }

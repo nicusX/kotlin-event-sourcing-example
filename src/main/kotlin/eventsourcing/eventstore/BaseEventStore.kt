@@ -9,7 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
- * Implements most of the logic of the Event Store, without implementing the storage
+ * Implements most of the logic of the Event Store, keeping the actual storage abstract
  */
 abstract class BaseEventStore(private val eventPublisher : EventPublisher<Event>) : EventStore {
     protected data class StreamKey(val aggregateType: AggregateType, val aggregateID: AggregateID) {

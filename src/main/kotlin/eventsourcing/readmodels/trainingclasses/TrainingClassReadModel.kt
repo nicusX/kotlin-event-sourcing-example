@@ -5,6 +5,11 @@ import eventsourcing.readmodels.DocumentStore
 import eventsourcing.readmodels.SingleDocumentStore
 import java.time.LocalDate
 
+// This Read Model keep an internal view with Student contacts of ALL students (not just those enrolled). This provides
+// the information required to add the enrolled student to the class and not included in the StudentEnrolled
+// While the TrainingClass state is updated listening to NewClassScheduled, StudentEnrolled, StudentUnenrolled events
+// the secondary view is updated when a NewStudentRegistered is received
+
 data class TrainingClassDetails (
         val classId: String,
         val title : String,
@@ -30,13 +35,6 @@ data class TrainingClass (
 
 typealias TrainingClassList = List<TrainingClass>
 
-// This Read Model maintains an internal view with Student contacts of ALL students (not just those enrolled). This provides
-// the information required to add the enrolled student to the class and not included in the StudentEnrolled
-// While the TrainingClass state is updated listening to NewClassScheduled, StudentEnrolled, StudentUnenrolled events
-// the secondary view is updated when a NewStudentRegistered is received
-
-// Note the projection assumes events are always consistent.
-// No need to validate data and any exceptions mean something went wrong.
 
 class TrainingClassReadModel (
         private val trainingClassDetailsStore: DocumentStore<TrainingClassDetails>,

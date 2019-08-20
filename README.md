@@ -43,7 +43,7 @@ newly registered Student.
 
 ## The "C"-side
 
-The Write model supports a form of optimistic consistency to protect from concurrent changes to an Aggregate.
+The Write model supports a version-based concurrency control, to optimistically prevent from concurrent changes to an Aggregate.
 Read Models provide the version of Aggregates and Commands contain the version of Aggregate they are expected to be applied to.
 
 The Write side of the system is completely synchronous and blocking.

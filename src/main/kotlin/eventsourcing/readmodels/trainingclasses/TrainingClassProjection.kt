@@ -1,6 +1,5 @@
 package eventsourcing.readmodels.trainingclasses
 
-import arrow.core.Option
 import arrow.core.getOrElse
 import eventsourcing.domain.*
 import eventsourcing.readmodels.DocumentStore
@@ -11,7 +10,10 @@ import org.slf4j.LoggerFactory
 
 // TODO Add the ability to rebuild the Read Model, re-streaming all events. Possibly on InconsistentReadModelException
 
-class TrainingClassProjection (
+// Note the projection assumes events are always consistent.
+// No need to validate data and any exceptions mean something went wrong.
+
+class TrainingClassProjection(
         private val trainingClassDetailsStore: DocumentStore<TrainingClassDetails>,
         private val trainingClassListStore: SingleDocumentStore<TrainingClassList>,
         private val studentsContactsStore: DocumentStore<StudentContacts>)
@@ -30,7 +32,7 @@ class TrainingClassProjection (
                 val classId = event.classId
                 val studentId = event.studentId
                 log.debug("Adding Student {} to Class {} in read model", studentId, classId)
-                val student : EnrolledStudent =  studentsContactsStore.lookupByStudentIdOrFail(studentId).toEnrolledStudent()
+                val student: EnrolledStudent = studentsContactsStore.lookupByStudentIdOrFail(studentId).toEnrolledStudent()
                 trainingClassDetailsStore.addStudentToClass(classId, student, event.version!!)
                 // No need to update the class list
             }
@@ -54,7 +56,7 @@ class TrainingClassProjection (
     }
 }
 
-private fun NewClassScheduled.toTrainingClassDetails() : TrainingClassDetails =
+private fun NewClassScheduled.toTrainingClassDetails(): TrainingClassDetails =
         TrainingClassDetails(
                 classId = this.classId,
                 title = this.title,
@@ -64,7 +66,7 @@ private fun NewClassScheduled.toTrainingClassDetails() : TrainingClassDetails =
                 students = emptyList(),
                 version = this.version!!)
 
-private fun NewClassScheduled.toTrainingClass() : TrainingClass =
+private fun NewClassScheduled.toTrainingClass(): TrainingClass =
         TrainingClass(
                 classId = this.classId,
                 title = this.title,
@@ -98,8 +100,8 @@ private fun DocumentStore<TrainingClassDetails>.lookupByClassIdOrFail(classId: C
         this.get(classId).getOrElse { throw InconsistentReadModelException }
 
 
-private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old : TrainingClassDetails = this.lookupByClassIdOrFail(classId)
+private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: String, student: EnrolledStudent, newVersion: Long) {
+    val old: TrainingClassDetails = this.lookupByClassIdOrFail(classId)
     val new = old.copy(
             availableSpots = old.availableSpots - 1,
             students = old.students + student,
@@ -108,12 +110,12 @@ private fun DocumentStore<TrainingClassDetails>.addStudentToClass(classId: Strin
     this.save(classId, new)
 }
 
-private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: String, student: EnrolledStudent, newVersion : Long) {
-    val old : TrainingClassDetails = this.lookupByClassIdOrFail(classId)
+private fun DocumentStore<TrainingClassDetails>.removeStudentFromClass(classId: String, student: EnrolledStudent, newVersion: Long) {
+    val old: TrainingClassDetails = this.lookupByClassIdOrFail(classId)
     val new = old.copy(
-                availableSpots = old.availableSpots + 1,
-                students = old.students - student,
-                version = newVersion)
+            availableSpots = old.availableSpots + 1,
+            students = old.students - student,
+            version = newVersion)
 
     TrainingClassProjection.log.trace("Removing Student from Class in TrainingClassDetails view. Updating {} -> {}", old, new)
     this.save(classId, new)

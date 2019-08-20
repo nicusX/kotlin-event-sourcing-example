@@ -19,7 +19,9 @@ import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 
 @SpringBootApplication
-class KotlinBootApplication {
+class EventSourcingApplication {
+
+    // Manually wiring up all dependencies
 
     // Student Details Read Model
     private val studentDetailsDatastore = InMemoryDocumentStore<StudentDetails>()
@@ -53,6 +55,9 @@ class KotlinBootApplication {
     private val studentRepository = StudentRepository(eventStore)
     private val commandDispatcher : CommandDispatcher = CommandDispatcher(classRepository, studentRepository, registeredEmailIndex)
 
+
+    // The only Spring Beans are read models and the command handler dispatcher, to be injected in Controllers
+
     // These Beans are injected in the MVC Controllers
     @Bean fun studentDetailsReadModelFacade() = studentDetailsReadModelFacade
     @Bean fun studentListReadModelFacade() = studentListReadModelFacade
@@ -61,5 +66,5 @@ class KotlinBootApplication {
 }
 
 fun main(args: Array<String>) {
-    runApplication<KotlinBootApplication>(*args)
+    runApplication<EventSourcingApplication>(*args)
 }

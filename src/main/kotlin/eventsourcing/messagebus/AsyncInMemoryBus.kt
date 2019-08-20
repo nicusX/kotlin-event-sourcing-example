@@ -37,7 +37,7 @@ class AsyncInMemoryBus(private val scope: CoroutineScope, bufferSize: Int = 100,
 
             if (simulateLatency != null ) {
                 log.trace("Simulating {}ms latency", log.trace("Forcibly delaying handling"))
-                delay(500L)
+                delay(simulateLatency)
             }
 
             log.trace("Handler '{}' is handling '{}'", handler, it)
@@ -45,11 +45,11 @@ class AsyncInMemoryBus(private val scope: CoroutineScope, bufferSize: Int = 100,
         }
     }
 
-    companion object {
-        private val log = LoggerFactory.getLogger(AsyncInMemoryBus::class.java)
-    }
-
     fun shutdown() {
         bus.close()
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AsyncInMemoryBus::class.java)
     }
 }

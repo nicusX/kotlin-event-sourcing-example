@@ -15,16 +15,16 @@ typealias StudentList = Iterable<Student>
 // but it is meant to demonstrate read models may be very specialised and decoupled
 
 class StudentListReadModel(private val studentListStore: SingleDocumentStore<StudentList>) {
-    fun allStudents() : StudentList = studentListStore.get()
+    fun allStudents(): StudentList = studentListStore.get()
 }
 
-class StudentListProjection(private val studentListStore : SingleDocumentStore<StudentList>) : Handles<Event> {
+class StudentListProjection(private val studentListStore: SingleDocumentStore<StudentList>) : Handles<Event> {
     override fun handle(event: Event) {
         when (event) {
             is NewStudentRegistered -> {
                 val new = event.toStudent()
                 log.debug("Add new Student {} to the read-model and sort the list alphabetically by fullName", new)
-                val newSortedList = ((studentListStore.get() ) + new).sortedBy { it.fullName }
+                val newSortedList = ((studentListStore.get()) + new).sortedBy { it.fullName }
                 studentListStore.save(newSortedList)
             }
         }

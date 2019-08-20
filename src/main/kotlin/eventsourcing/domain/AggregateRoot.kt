@@ -8,6 +8,9 @@ typealias AggregateID = String
 
 interface AggregateType
 
+/**
+ * Groups common behaviours of all Aggregates
+ */
 abstract class AggregateRoot(val id: AggregateID) {
 
     abstract fun aggregateType(): AggregateType
@@ -22,27 +25,30 @@ abstract class AggregateRoot(val id: AggregateID) {
     }
 
     protected fun <A: AggregateRoot> applyAndQueueEvent(event: Event): A {
-        applyEvent(event)
-        log.debug("Appending event {} to uncommitted changes", event)
+        log.debug("Applying {}", event)
+        applyEvent(event) // Remember: this never fails
+
+        log.debug("Queueing uncommitted change {}", event)
         uncommittedChanges.add(event)
         return this as A
     }
 
-
     protected abstract fun applyEvent(event: Event): AggregateRoot
-
-    class UnsupportedEventException(eventClass: Class<out Event>)
-        : Exception("Unsupported event ${eventClass.canonicalName}")
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(AggregateRoot::class.java)
 
+        /**
+         * Rebuild the state of the Aggregate from its Events
+         */
         fun <A: AggregateRoot> loadFromHistory(aggregate: A, history: Iterable<Event>): A {
             log.debug("Reloading aggregate {} state from history", aggregate)
-            for (event: Event in history) {
-                aggregate.applyEvent(event)
-            }
-            return aggregate
+
+            // Rebuilding an Aggregate state from Events is a 'fold' operation
+            return history.fold( aggregate, { agg, event  -> agg.applyEvent(event) as A })
         }
     }
 }
+
+class UnsupportedEventException(eventClass: Class<out Event>)
+    : Exception("Unsupported event ${eventClass.canonicalName}")

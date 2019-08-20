@@ -6,6 +6,11 @@ import arrow.core.flatMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+/**
+ * Repository implementing persistence through Event Sourcing:
+ * - save uncommited changes (Events) of an Aggregate
+ * - rebuild Aggregate from its Events
+ */
 abstract class EventSourcedRepository<A: AggregateRoot>(eventStore: EventStore) : Repository<A> {
 
     private val store = eventStore

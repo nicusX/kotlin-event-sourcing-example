@@ -9,6 +9,9 @@ import java.util.*
 typealias StudentID = String
 typealias EMail = String
 
+/**
+ * Aggregate root representing a Student
+ */
 class Student(id: StudentID) : AggregateRoot(id) {
 
     object TYPE : AggregateType {
@@ -25,19 +28,26 @@ class Student(id: StudentID) : AggregateRoot(id) {
 
 
     private fun apply(event: NewStudentRegistered): Student {
-        // TODO notify the Student (i.e. a non-idempotent side effect)
+        // Nothing special to do here.
+        // We are keeping the index of registered emails in an auxiliary read model within the  RegisteredEmailsIndex service
         return this
     }
 
     companion object {
+
+        // This is the only behaviour of this Aggregate at the moment
         fun registerNewStudent(email: EMail, fullname: String, repository: StudentRepository, registeredEmailsIndex: RegisteredEmailsIndex): Result<StudentInvariantViolation, Student> =
                 when {
+
                     // This is an example of an invariant across multiple aggregates.
                     // In a distributed system it should be something more complex than this, to guarantee uniqueness across multiple nodes.
                     registeredEmailsIndex.isEmailAlreadyInUse(email) -> Left(StudentInvariantViolation.EmailAlreadyInUse)
+
+                    // Success
                     else -> {
                         val studentId = UUID.randomUUID().toString()
                         val student = Student(studentId)
+                        // TODO notify the Student (i.e. a non-idempotent side effect)
                         Right(student.applyAndQueueEvent(NewStudentRegistered(studentId, email, fullname)))
                     }
                 }

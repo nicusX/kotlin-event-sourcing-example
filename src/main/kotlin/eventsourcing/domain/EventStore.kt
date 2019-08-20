@@ -3,6 +3,9 @@ package eventsourcing.domain
 import arrow.core.None
 import arrow.core.Option
 
+/**
+ * Interface for a simple Event Store
+ */
 interface EventStore {
     fun saveEvents(
             aggregateType: AggregateType,
